@@ -1,5 +1,5 @@
 import type { ProviderSecret } from '../../shared/providers/types';
-import { getClawXProviderStore } from '../providers/store-instance';
+import { getShortClawProviderStore } from '../providers/store-instance';
 
 export interface SecretStore {
   get(accountId: string): Promise<ProviderSecret | null>;
@@ -9,7 +9,7 @@ export interface SecretStore {
 
 export class ElectronStoreSecretStore implements SecretStore {
   async get(accountId: string): Promise<ProviderSecret | null> {
-    const store = await getClawXProviderStore();
+    const store = await getShortClawProviderStore();
     const secrets = (store.get('providerSecrets') ?? {}) as Record<string, ProviderSecret>;
     const secret = secrets[accountId];
     if (secret) {
@@ -30,7 +30,7 @@ export class ElectronStoreSecretStore implements SecretStore {
   }
 
   async set(secret: ProviderSecret): Promise<void> {
-    const store = await getClawXProviderStore();
+    const store = await getShortClawProviderStore();
     const secrets = (store.get('providerSecrets') ?? {}) as Record<string, ProviderSecret>;
     secrets[secret.accountId] = secret;
     store.set('providerSecrets', secrets);
@@ -52,7 +52,7 @@ export class ElectronStoreSecretStore implements SecretStore {
   }
 
   async delete(accountId: string): Promise<void> {
-    const store = await getClawXProviderStore();
+    const store = await getShortClawProviderStore();
     const secrets = (store.get('providerSecrets') ?? {}) as Record<string, ProviderSecret>;
     delete secrets[accountId];
     store.set('providerSecrets', secrets);

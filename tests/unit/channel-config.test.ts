@@ -5,8 +5,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const { testHome, testUserData, mockLoggerWarn, mockLoggerInfo, mockLoggerError } = vi.hoisted(() => {
   const suffix = Math.random().toString(36).slice(2);
   return {
-    testHome: `/tmp/clawx-channel-config-${suffix}`,
-    testUserData: `/tmp/clawx-channel-config-user-data-${suffix}`,
+    testHome: `/tmp/shortclaw-channel-config-${suffix}`,
+    testUserData: `/tmp/shortclaw-channel-config-user-data-${suffix}`,
     mockLoggerWarn: vi.fn(),
     mockLoggerInfo: vi.fn(),
     mockLoggerError: vi.fn(),

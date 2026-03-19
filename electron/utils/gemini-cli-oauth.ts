@@ -3,7 +3,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, unlinkSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { delimiter, dirname, join } from 'node:path';
-import { getClawXConfigDir } from './paths';
+import { getShortClawConfigDir } from './paths';
 import { proxyAwareFetch } from './proxy-fetch';
 
 const CLIENT_ID_KEYS = ['OPENCLAW_GEMINI_OAUTH_CLIENT_ID', 'GEMINI_CLI_OAUTH_CLIENT_ID'];
@@ -24,7 +24,7 @@ const SCOPES = [
 const TIER_FREE = 'free-tier';
 const TIER_LEGACY = 'legacy-tier';
 const TIER_STANDARD = 'standard-tier';
-const LOCAL_GEMINI_DIR = join(getClawXConfigDir(), 'gemini-cli');
+const LOCAL_GEMINI_DIR = join(getShortClawConfigDir(), 'gemini-cli');
 
 export type GeminiCliOAuthCredentials = {
   access: string;
@@ -389,7 +389,7 @@ async function waitForLocalCallback(params: {
           res.statusCode = 200;
           res.setHeader('Content-Type', 'text/html; charset=utf-8');
           res.end(
-            "<!doctype html><html><head><meta charset='utf-8'/></head><body><h2>Session expired</h2><p>This authorization link is from a previous attempt. Please go back to ClawX and try again.</p></body></html>",
+            "<!doctype html><html><head><meta charset='utf-8'/></head><body><h2>Session expired</h2><p>This authorization link is from a previous attempt. Please go back to ShortClaw and try again.</p></body></html>",
           );
           return;
         }
@@ -397,7 +397,7 @@ async function waitForLocalCallback(params: {
         res.statusCode = 200;
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
         res.end(
-          "<!doctype html><html><head><meta charset='utf-8'/></head><body><h2>Gemini CLI OAuth complete</h2><p>You can close this window and return to ClawX.</p></body></html>",
+          "<!doctype html><html><head><meta charset='utf-8'/></head><body><h2>Gemini CLI OAuth complete</h2><p>You can close this window and return to ShortClaw.</p></body></html>",
         );
 
         finish(undefined, { code, state });
@@ -512,7 +512,7 @@ async function discoverProject(accessToken: string): Promise<string> {
     Authorization: `Bearer ${accessToken}`,
     'Content-Type': 'application/json',
     'User-Agent': 'google-api-nodejs-client/9.15.1',
-    'X-Goog-Api-Client': 'gl-node/clawx',
+    'X-Goog-Api-Client': 'gl-node/shortclaw',
   };
 
   const loadBody = {
@@ -677,7 +677,7 @@ export async function loginGeminiCliOAuth(
   ctx: GeminiCliOAuthContext,
 ): Promise<GeminiCliOAuthCredentials> {
   if (ctx.isRemote) {
-    throw new Error('Remote/manual Gemini OAuth is not implemented in ClawX yet.');
+    throw new Error('Remote/manual Gemini OAuth is not implemented in ShortClaw yet.');
   }
 
   await ctx.note(

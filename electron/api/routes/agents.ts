@@ -62,7 +62,7 @@ async function restartGatewayForAgentDeletion(ctx: HostApiContext): Promise<void
       // a previous pnpm dev run), forcefully kill whatever is on the port.
       try {
         if (process.platform === 'darwin' || process.platform === 'linux') {
-          // MUST use -sTCP:LISTEN. Otherwise lsof returns the client process (ClawX itself) 
+          // MUST use -sTCP:LISTEN. Otherwise lsof returns the client process (ShortClaw itself) 
           // that has an ESTABLISHED WebSocket connection to the port, causing us to kill ourselves.
           const { stdout } = await execAsync(`lsof -t -i :${port} -sTCP:LISTEN`);
           const pids = stdout.trim().split('\n').filter(Boolean);

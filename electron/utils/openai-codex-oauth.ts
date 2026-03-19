@@ -19,7 +19,7 @@ const SUCCESS_HTML = `<!doctype html>
   <title>Authentication successful</title>
 </head>
 <body>
-  <p>Authentication successful. Return to ClawX to continue.</p>
+  <p>Authentication successful. Return to ShortClaw to continue.</p>
 </body>
 </html>`;
 

@@ -85,7 +85,7 @@ const UNIFIED_CHANNELS = new Set<string>([
 ]);
 
 const customInvokers = new Map<Exclude<TransportKind, 'ipc'>, TransportInvoker>();
-const GATEWAY_WS_DIAG_FLAG = 'clawx:gateway-ws-diagnostic';
+const GATEWAY_WS_DIAG_FLAG = 'shortclaw:gateway-ws-diagnostic';
 
 let transportConfig: ApiClientTransportConfig = {
   enabled: {
@@ -185,7 +185,7 @@ function mapUnifiedErrorCode(code?: string): AppErrorCode {
 
 function shouldLogApiRequests(): boolean {
   try {
-    return import.meta.env.DEV || window.localStorage.getItem('clawx:api-log') === '1';
+    return import.meta.env.DEV || window.localStorage.getItem('shortclaw:api-log') === '1';
   } catch {
     return !!import.meta.env.DEV;
   }
@@ -707,7 +707,7 @@ export function createGatewayWsTransportInvoker(options: GatewayWsTransportOptio
         maxProtocol: 3,
         client: {
           id: 'openclaw-control-ui',
-          displayName: 'ClawX UI',
+          displayName: 'ShortClaw UI',
           version: '1.0.0',
           platform: window.electron?.platform ?? 'unknown',
           mode: 'webchat',

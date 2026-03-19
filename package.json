@@ -1,5 +1,5 @@
 {
-    "name": "clawx",
+    "name": "shortclaw",
     "version": "0.2.7-alpha.0",
     "pnpm": {
         "onlyBuiltDependencies": [
@@ -17,9 +17,9 @@
             "https-proxy-agent": "7.0.6"
         }
     },
-    "description": "ClawX - Graphical AI Assistant based on OpenClaw",
+    "description": "ShortClaw - Graphical AI Assistant based on OpenClaw",
     "main": "dist-electron/main/index.js",
-    "author": "ClawX Team",
+    "author": "ShortClaw Team",
     "license": "MIT",
     "private": true,
     "scripts": {

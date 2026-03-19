@@ -114,8 +114,8 @@ describe('plugin installer diagnostics', () => {
     setPlatform('win32');
     mockHomedir.mockReturnValue('C:\\Users\\test');
 
-    const sourceDir = 'C:\\Program Files\\ClawX\\resources\\openclaw-plugins\\wecom';
-    const sourceManifestSuffix = 'Program Files\\ClawX\\resources\\openclaw-plugins\\wecom\\openclaw.plugin.json';
+    const sourceDir = 'C:\\Program Files\\ShortClaw\\resources\\openclaw-plugins\\wecom';
+    const sourceManifestSuffix = 'Program Files\\ShortClaw\\resources\\openclaw-plugins\\wecom\\openclaw.plugin.json';
 
     mockExistsSync.mockImplementation((input: string) => String(input).includes(sourceManifestSuffix));
     mockCpSync.mockImplementation(() => {
@@ -156,8 +156,8 @@ describe('plugin installer diagnostics', () => {
     setPlatform('win32');
     mockHomedir.mockReturnValue('C:\\Users\\test');
 
-    const sourceDir = 'C:\\Program Files\\ClawX\\resources\\openclaw-plugins\\wecom';
-    const sourceManifestSuffix = 'Program Files\\ClawX\\resources\\openclaw-plugins\\wecom\\openclaw.plugin.json';
+    const sourceDir = 'C:\\Program Files\\ShortClaw\\resources\\openclaw-plugins\\wecom';
+    const sourceManifestSuffix = 'Program Files\\ShortClaw\\resources\\openclaw-plugins\\wecom\\openclaw.plugin.json';
 
     mockExistsSync.mockImplementation((input: string) => String(input).includes(sourceManifestSuffix));
     mockCpSync.mockImplementation(() => {

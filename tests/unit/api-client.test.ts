@@ -18,7 +18,7 @@ import {
 describe('api-client', () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    window.localStorage.removeItem('clawx:gateway-ws-diagnostic');
+    window.localStorage.removeItem('shortclaw:gateway-ws-diagnostic');
     configureApiClient({
       enabled: { ws: false, http: false },
       rules: [{ matcher: /.*/, order: ['ipc'] }],

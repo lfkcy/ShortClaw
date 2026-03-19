@@ -5,8 +5,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const { testHome, testUserData } = vi.hoisted(() => {
   const suffix = Math.random().toString(36).slice(2);
   return {
-    testHome: `/tmp/clawx-agent-config-${suffix}`,
-    testUserData: `/tmp/clawx-agent-config-user-data-${suffix}`,
+    testHome: `/tmp/shortclaw-agent-config-${suffix}`,
+    testUserData: `/tmp/shortclaw-agent-config-user-data-${suffix}`,
   };
 });
 

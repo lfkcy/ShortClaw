@@ -1,6 +1,6 @@
 {
     "title": "Agents",
-    "subtitle": "When adding a new Agent, ClawX will copy the main Agent's workspace files and runtime auth setup. The configuration can be modified through a dialog.",
+    "subtitle": "When adding a new Agent, ShortClaw will copy the main Agent's workspace files and runtime auth setup. The configuration can be modified through a dialog.",
     "refresh": "Refresh",
     "addAgent": "Add Agent",
     "gatewayWarning": "Gateway service is not running. Agent/channel changes may take a moment to apply.",
@@ -14,13 +14,13 @@
     "creating": "Creating...",
     "createDialog": {
         "title": "Add Agent",
-        "description": "Create a new agent by name. ClawX will copy the main agent's workspace bootstrap files and runtime auth setup.",
+        "description": "Create a new agent by name. ShortClaw will copy the main agent's workspace bootstrap files and runtime auth setup.",
         "nameLabel": "Agent Name",
         "namePlaceholder": "Coding Helper"
     },
     "deleteDialog": {
         "title": "Delete Agent",
-        "message": "Delete \"{{name}}\" from ClawX? This permanently deletes the agent and its ClawX-managed workspace, runtime, and session files from disk."
+        "message": "Delete \"{{name}}\" from ShortClaw? This permanently deletes the agent and its ShortClaw-managed workspace, runtime, and session files from disk."
     },
     "settingsDialog": {
         "title": "{{name}} Settings",
@@ -37,7 +37,7 @@
     },
     "removeChannelDialog": {
         "title": "Remove Channel",
-        "message": "Remove {{name}} from ClawX? This deletes the current channel configuration."
+        "message": "Remove {{name}} from ShortClaw? This deletes the current channel configuration."
     },
     "toast": {
         "agentCreated": "Agent created",

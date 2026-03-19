@@ -9,7 +9,7 @@ import { Menu, app, shell, BrowserWindow } from 'electron';
  */
 export function createMenu(): void {
   const isMac = process.platform === 'darwin';
-  
+
   const template: Electron.MenuItemConstructorOptions[] = [
     // App menu (macOS only)
     ...(isMac
@@ -39,7 +39,7 @@ export function createMenu(): void {
           },
         ]
       : []),
-    
+
     // File menu
     {
       label: 'File',
@@ -56,7 +56,7 @@ export function createMenu(): void {
         isMac ? { role: 'close' } : { role: 'quit' },
       ],
     },
-    
+
     // Edit menu
     {
       label: 'Edit',
@@ -80,7 +80,7 @@ export function createMenu(): void {
             ]),
       ],
     },
-    
+
     // View menu
     {
       label: 'View',
@@ -96,7 +96,7 @@ export function createMenu(): void {
         { role: 'togglefullscreen' },
       ],
     },
-    
+
     // Navigate menu
     {
       label: 'Navigate',
@@ -151,7 +151,7 @@ export function createMenu(): void {
         },
       ],
     },
-    
+
     // Window menu
     {
       label: 'Window',
@@ -168,7 +168,7 @@ export function createMenu(): void {
           : [{ role: 'close' as const }]),
       ],
     },
-    
+
     // Help menu
     {
       role: 'help',
@@ -176,13 +176,13 @@ export function createMenu(): void {
         {
           label: 'Documentation',
           click: async () => {
-            await shell.openExternal('https://claw-x.com');
+            await shell.openExternal('https://shortapi.ai/claw');
           },
         },
         {
           label: 'Report Issue',
           click: async () => {
-            await shell.openExternal('https://github.com/ValueCell-ai/ClawX/issues');
+            await shell.openExternal('https://github.com/ValueCell-ai/ShortClaw/issues');
           },
         },
         { type: 'separator' },
@@ -195,7 +195,7 @@ export function createMenu(): void {
       ],
     },
   ];
-  
+
   const menu = Menu.buildFromTemplate(template);
   Menu.setApplicationMenu(menu);
 }

@@ -10,10 +10,10 @@ const GATEWAY_FETCH_PRELOAD_SOURCE = `'use strict';
 (function () {
   var _f = globalThis.fetch;
   if (typeof _f !== 'function') return;
-  if (globalThis.__clawxFetchPatched) return;
-  globalThis.__clawxFetchPatched = true;
+  if (globalThis.__shortclawFetchPatched) return;
+  globalThis.__shortclawFetchPatched = true;
 
-  globalThis.fetch = function clawxFetch(input, init) {
+  globalThis.fetch = function shortclawFetch(input, init) {
     var url =
       typeof input === 'string' ? input
         : input && typeof input === 'object' && typeof input.url === 'string'
@@ -32,8 +32,8 @@ const GATEWAY_FETCH_PRELOAD_SOURCE = `'use strict';
       delete flat['HTTP-Referer'];
       delete flat['x-title'];
       delete flat['X-Title'];
-      flat['HTTP-Referer'] = 'https://claw-x.com';
-      flat['X-Title'] = 'ClawX';
+      flat['HTTP-Referer'] = 'https://shortapi.ai/claw';
+      flat['X-Title'] = 'ShortClaw';
       init.headers = flat;
     }
     return _f.call(globalThis, input, init);
@@ -42,8 +42,8 @@ const GATEWAY_FETCH_PRELOAD_SOURCE = `'use strict';
   if (process.platform === 'win32') {
     try {
       var cp = require('child_process');
-      if (!cp.__clawxPatched) {
-        cp.__clawxPatched = true;
+      if (!cp.__shortclawPatched) {
+        cp.__shortclawPatched = true;
         ['spawn', 'exec', 'execFile', 'fork', 'spawnSync', 'execSync', 'execFileSync'].forEach(function(method) {
           var original = cp[method];
           if (typeof original !== 'function') return;
@@ -112,7 +112,7 @@ export async function launchGatewayProcess(options: {
   } = options.launchContext;
 
   logger.info(
-    `Starting Gateway process (mode=${mode}, port=${options.port}, entry="${entryScript}", args="${options.sanitizeSpawnArgs(gatewayArgs).join(' ')}", cwd="${openclawDir}", bundledBin=${binPathExists ? 'yes' : 'no'}, providerKeys=${loadedProviderKeyCount}, channels=${channelStartupSummary}, proxy=${proxySummary})`,
+    `Starting Gateway process (mode=${mode}, port=${options.port}, entry="${entryScript}", args="${options.sanitizeSpawnArgs(gatewayArgs).join(' ')}", cwd="${openclawDir}", bundledBin=${binPathExists ? 'yes' : 'no'}, providerKeys=${loadedProviderKeyCount}, channels=${channelStartupSummary}, proxy=${proxySummary})`
   );
   const lastSpawnSummary = `mode=${mode}, entry="${entryScript}", args="${options.sanitizeSpawnArgs(gatewayArgs).join(' ')}", cwd="${openclawDir}"`;
 
@@ -123,7 +123,7 @@ export async function launchGatewayProcess(options: {
       if (existsSync(preloadPath)) {
         runtimeEnv.NODE_OPTIONS = appendNodeRequireToNodeOptions(
           runtimeEnv.NODE_OPTIONS,
-          preloadPath,
+          preloadPath
         );
       }
     } catch (err) {
@@ -131,50 +131,53 @@ export async function launchGatewayProcess(options: {
     }
   }
 
-  return await new Promise<{ child: Electron.UtilityProcess; lastSpawnSummary: string }>((resolve, reject) => {
-    const child = utilityProcess.fork(entryScript, gatewayArgs, {
-      cwd: openclawDir,
-      stdio: 'pipe',
-      env: runtimeEnv as NodeJS.ProcessEnv,
-      serviceName: 'OpenClaw Gateway',
-    });
+  return await new Promise<{ child: Electron.UtilityProcess; lastSpawnSummary: string }>(
+    (resolve, reject) => {
+      const child = utilityProcess.fork(entryScript, gatewayArgs, {
+        cwd: openclawDir,
+        stdio: 'pipe',
+        env: runtimeEnv as NodeJS.ProcessEnv,
+        serviceName: 'OpenClaw Gateway',
+      });
 
-    let settled = false;
-    const resolveOnce = () => {
-      if (settled) return;
-      settled = true;
-      resolve({ child, lastSpawnSummary });
-    };
-    const rejectOnce = (error: Error) => {
-      if (settled) return;
-      settled = true;
-      reject(error);
-    };
+      let settled = false;
+      const resolveOnce = () => {
+        if (settled) return;
+        settled = true;
+        resolve({ child, lastSpawnSummary });
+      };
+      const rejectOnce = (error: Error) => {
+        if (settled) return;
+        settled = true;
+        reject(error);
+      };
 
-    child.on('error', (error) => {
-      logger.error('Gateway process spawn error:', error);
-      options.onError(error);
-      rejectOnce(error);
-    });
+      child.on('error', (error) => {
+        logger.error('Gateway process spawn error:', error);
+        options.onError(error);
+        rejectOnce(error);
+      });
 
-    child.on('exit', (code: number) => {
-      const expectedExit = !options.getShouldReconnect() || options.getCurrentState() === 'stopped';
-      const level = expectedExit ? logger.info : logger.warn;
-      level(`Gateway process exited (code=${code}, expected=${expectedExit ? 'yes' : 'no'})`);
-      options.onExit(child, code);
-    });
+      child.on('exit', (code: number) => {
+        const expectedExit =
+          !options.getShouldReconnect() || options.getCurrentState() === 'stopped';
+        const level = expectedExit ? logger.info : logger.warn;
+        level(`Gateway process exited (code=${code}, expected=${expectedExit ? 'yes' : 'no'})`);
+        options.onExit(child, code);
+      });
 
-    child.stderr?.on('data', (data) => {
-      const raw = data.toString();
-      for (const line of raw.split(/\r?\n/)) {
-        options.onStderrLine(line);
-      }
-    });
+      child.stderr?.on('data', (data) => {
+        const raw = data.toString();
+        for (const line of raw.split(/\r?\n/)) {
+          options.onStderrLine(line);
+        }
+      });
 
-    child.on('spawn', () => {
-      logger.info(`Gateway process started (pid=${child.pid})`);
-      options.onSpawn(child.pid);
-      resolveOnce();
-    });
-  });
+      child.on('spawn', () => {
+        logger.info(`Gateway process started (pid=${child.pid})`);
+        options.onSpawn(child.pid);
+        resolveOnce();
+      });
+    }
+  );
 }
