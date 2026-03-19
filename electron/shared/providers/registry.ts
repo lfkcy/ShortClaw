@@ -7,6 +7,38 @@ import type {
 
 export const PROVIDER_DEFINITIONS: ProviderDefinition[] = [
   {
+    id: 'shortapi',
+    name: 'ShortAPI',
+    icon: 'shortapi',
+    placeholder: 'ak-...',
+    model: 'DeepSeek',
+    requiresApiKey: true,
+    defaultBaseUrl: 'https://shortapi-api.wenuts.top/v1/chat/completions',
+    showModelId: true,
+    modelIdPlaceholder: 'deepseek/deepseek-v3.2',
+    defaultModelId: 'deepseek/deepseek-v3.2',
+    category: 'compatible',
+    envVar: 'SHORTAPI_API_KEY',
+    supportedAuthModes: ['api_key'],
+    defaultAuthMode: 'api_key',
+    supportsMultipleAccounts: true,
+    providerConfig: {
+      baseUrl: 'https://shortapi-api.wenuts.top/v1/chat/completions',
+      api: 'openai-completions',
+      apiKeyEnv: 'SHORTAPI_API_KEY',
+      models: [
+        {
+          id: 'deepseek/deepseek-v3.2',
+          name: 'deepseek/deepseek-v3.2',
+          api: 'openai-completions',
+          input: ['text'],
+          contextWindow: 163840,
+          maxTokens: 8192,
+        },
+      ],
+    },
+  },
+  {
     id: 'anthropic',
     name: 'Anthropic',
     icon: '🤖',

@@ -19,6 +19,7 @@ export const PROVIDER_TYPES = [
   'qwen-portal',
   'ollama',
   'custom',
+  'shortapi',
 ] as const;
 export type ProviderType = (typeof PROVIDER_TYPES)[number];
 
@@ -34,6 +35,7 @@ export const BUILTIN_PROVIDER_TYPES = [
   'minimax-portal-cn',
   'qwen-portal',
   'ollama',
+  'shortapi',
 ] as const;
 
 export const OLLAMA_PLACEHOLDER_API_KEY = 'ollama-local';
@@ -123,6 +125,18 @@ import { providerIcons } from '@/assets/providers';
 
 /** All supported provider types with UI metadata */
 export const PROVIDER_TYPE_INFO: ProviderTypeInfo[] = [
+  {
+    id: 'shortapi',
+    name: 'ShortAPI',
+    icon: 'shortapi',
+    placeholder: 'ak-...',
+    model: 'DeepSeek',
+    requiresApiKey: true,
+    defaultBaseUrl: 'https://shortapi-api.wenuts.top/v1',
+    showModelId: true,
+    modelIdPlaceholder: 'deepseek/deepseek-v3.2',
+    defaultModelId: 'deepseek/deepseek-v3.2',
+  },
   {
     id: 'anthropic',
     name: 'Anthropic',

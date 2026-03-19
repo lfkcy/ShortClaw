@@ -54,7 +54,7 @@ function buildOpenAiModelsUrl(baseUrl: string): string {
 
 function resolveOpenAiProbeUrls(
   baseUrl: string,
-  apiProtocol: 'openai-completions' | 'openai-responses',
+  apiProtocol: 'openai-completions' | 'openai-responses'
 ): { modelsUrl: string; probeUrl: string } {
   const normalizedBase = normalizeBaseUrl(baseUrl);
   const endpointSuffixPattern = /(\/responses?|\/chat\/completions)$/;
@@ -78,10 +78,10 @@ function logValidationRequest(
   provider: string,
   method: string,
   url: string,
-  headers: Record<string, string>,
+  headers: Record<string, string>
 ): void {
   console.log(
-    `[shortclaw-validate] ${provider} request ${method} ${sanitizeValidationUrl(url)} headers=${JSON.stringify(sanitizeHeaders(headers))}`,
+    `[shortclaw-validate] ${provider} request ${method} ${sanitizeValidationUrl(url)} headers=${JSON.stringify(sanitizeHeaders(headers))}`
   );
 }
 
@@ -117,7 +117,7 @@ function getValidationProfile(
 async function performProviderValidationRequest(
   providerLabel: string,
   url: string,
-  headers: Record<string, string>,
+  headers: Record<string, string>
 ): Promise<ValidationResult> {
   try {
     logValidationRequest(providerLabel, 'GET', url, headers);
@@ -134,12 +134,10 @@ async function performProviderValidationRequest(
   }
 }
 
-function classifyAuthResponse(
-  status: number,
-  data: unknown,
-): { valid: boolean; error?: string } {
+function classifyAuthResponse(status: number, data: unknown): { valid: boolean; error?: string } {
   if (status >= 200 && status < 300) return { valid: true };
   if (status === 429) return { valid: true };
+  if (status === 402) return { valid: true };
   if (status === 401 || status === 403) return { valid: false, error: 'Invalid API key' };
 
   const obj = data as { error?: { message?: string }; message?: string } | null;
@@ -151,11 +149,14 @@ async function validateOpenAiCompatibleKey(
   providerType: string,
   apiKey: string,
   apiProtocol: 'openai-completions' | 'openai-responses',
-  baseUrl?: string,
+  baseUrl?: string
 ): Promise<ValidationResult> {
   const trimmedBaseUrl = baseUrl?.trim();
   if (!trimmedBaseUrl) {
-    return { valid: false, error: `Base URL is required for provider "${providerType}" validation` };
+    return {
+      valid: false,
+      error: `Base URL is required for provider "${providerType}" validation`,
+    };
   }
 
   const headers = { Authorization: `Bearer ${apiKey}` };
@@ -164,7 +165,7 @@ async function validateOpenAiCompatibleKey(
 
   if (modelsResult.status === 404) {
     console.log(
-      `[shortclaw-validate] ${providerType} /models returned 404, falling back to ${apiProtocol} probe`,
+      `[shortclaw-validate] ${providerType} /models returned 404, falling back to ${apiProtocol} probe`
     );
     if (apiProtocol === 'openai-responses') {
       return await performResponsesProbe(providerType, probeUrl, headers);
@@ -178,7 +179,7 @@ async function validateOpenAiCompatibleKey(
 async function performResponsesProbe(
   providerLabel: string,
   url: string,
-  headers: Record<string, string>,
+  headers: Record<string, string>
 ): Promise<ValidationResult> {
   try {
     logValidationRequest(providerLabel, 'POST', url, headers);
@@ -215,7 +216,7 @@ async function performResponsesProbe(
 async function performChatCompletionsProbe(
   providerLabel: string,
   url: string,
-  headers: Record<string, string>,
+  headers: Record<string, string>
 ): Promise<ValidationResult> {
   try {
     logValidationRequest(providerLabel, 'POST', url, headers);
@@ -253,7 +254,7 @@ async function performChatCompletionsProbe(
 async function performAnthropicMessagesProbe(
   providerLabel: string,
   url: string,
-  headers: Record<string, string>,
+  headers: Record<string, string>
 ): Promise<ValidationResult> {
   try {
     logValidationRequest(providerLabel, 'POST', url, headers);
@@ -291,7 +292,7 @@ async function performAnthropicMessagesProbe(
 async function validateGoogleQueryKey(
   providerType: string,
   apiKey: string,
-  baseUrl?: string,
+  baseUrl?: string
 ): Promise<ValidationResult> {
   const base = normalizeBaseUrl(baseUrl || 'https://generativelanguage.googleapis.com/v1beta');
   const url = `${base}/models?pageSize=1&key=${encodeURIComponent(apiKey)}`;
@@ -301,7 +302,7 @@ async function validateGoogleQueryKey(
 async function validateAnthropicHeaderKey(
   providerType: string,
   apiKey: string,
-  baseUrl?: string,
+  baseUrl?: string
 ): Promise<ValidationResult> {
   const rawBase = normalizeBaseUrl(baseUrl || 'https://api.anthropic.com/v1');
   const base = rawBase.endsWith('/v1') ? rawBase : `${rawBase}/v1`;
@@ -321,7 +322,7 @@ async function validateAnthropicHeaderKey(
     modelsResult.error?.includes('API error: 400')
   ) {
     console.log(
-      `[shortclaw-validate] ${providerType} /models returned error, falling back to /messages probe`,
+      `[shortclaw-validate] ${providerType} /models returned error, falling back to /messages probe`
     );
     const messagesUrl = `${base}/messages`;
     return await performAnthropicMessagesProbe(providerType, messagesUrl, headers);
@@ -332,7 +333,7 @@ async function validateAnthropicHeaderKey(
 
 async function validateOpenRouterKey(
   providerType: string,
-  apiKey: string,
+  apiKey: string
 ): Promise<ValidationResult> {
   const url = 'https://openrouter.ai/api/v1/auth/key';
   const headers = { Authorization: `Bearer ${apiKey}` };
@@ -342,7 +343,7 @@ async function validateOpenRouterKey(
 export async function validateApiKeyWithProvider(
   providerType: string,
   apiKey: string,
-  options?: { baseUrl?: string; apiProtocol?: string },
+  options?: { baseUrl?: string; apiProtocol?: string }
 ): Promise<ValidationResult> {
   const profile = getValidationProfile(providerType, options);
   const resolvedBaseUrl = options?.baseUrl || getProviderConfig(providerType)?.baseUrl;
@@ -363,14 +364,14 @@ export async function validateApiKeyWithProvider(
           providerType,
           trimmedKey,
           'openai-completions',
-          resolvedBaseUrl,
+          resolvedBaseUrl
         );
       case 'openai-responses':
         return await validateOpenAiCompatibleKey(
           providerType,
           trimmedKey,
           'openai-responses',
-          resolvedBaseUrl,
+          resolvedBaseUrl
         );
       case 'google-query-key':
         return await validateGoogleQueryKey(providerType, trimmedKey, resolvedBaseUrl);
@@ -379,7 +380,10 @@ export async function validateApiKeyWithProvider(
       case 'openrouter':
         return await validateOpenRouterKey(providerType, trimmedKey);
       default:
-        return { valid: false, error: `Unsupported validation profile for provider: ${providerType}` };
+        return {
+          valid: false,
+          error: `Unsupported validation profile for provider: ${providerType}`,
+        };
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
