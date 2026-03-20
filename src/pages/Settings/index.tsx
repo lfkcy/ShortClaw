@@ -1182,7 +1182,7 @@ export function Settings() {
             <div className="space-y-6">
               <UpdateSettings />
 
-              <div className="flex items-center justify-between">
+              {/* <div className="flex items-center justify-between">
                 <div>
                   <Label className="text-[15px] font-medium text-foreground">
                     {t('updates.autoCheck')}
@@ -1192,9 +1192,9 @@ export function Settings() {
                   </p>
                 </div>
                 <Switch checked={autoCheckUpdate} onCheckedChange={setAutoCheckUpdate} />
-              </div>
+              </div> */}
 
-              <div className="flex items-center justify-between">
+              {/* <div className="flex items-center justify-between">
                 <div>
                   <Label className="text-[15px] font-medium text-foreground">
                     {t('updates.autoDownload')}
@@ -1210,7 +1210,7 @@ export function Settings() {
                     updateSetAutoDownload(value);
                   }}
                 />
-              </div>
+              </div> */}
             </div>
           </div>
 
@@ -1239,7 +1239,7 @@ export function Settings() {
                 >
                   {t('about.docs')}
                 </Button>
-                <Button
+                {/* <Button
                   variant="link"
                   className="h-auto p-0 text-[14px] text-blue-500 hover:text-blue-600 font-medium"
                   onClick={() =>
@@ -1247,8 +1247,8 @@ export function Settings() {
                   }
                 >
                   {t('about.github')}
-                </Button>
-                <Button
+                </Button> */}
+                {/* <Button
                   variant="link"
                   className="h-auto p-0 text-[14px] text-blue-500 hover:text-blue-600 font-medium"
                   onClick={() =>
@@ -1258,7 +1258,7 @@ export function Settings() {
                   }
                 >
                   {t('about.faq')}
-                </Button>
+                </Button> */}
               </div>
             </div>
           </div>

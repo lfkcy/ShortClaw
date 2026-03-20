@@ -155,17 +155,17 @@ export function UpdateSettings() {
           <p className="text-sm font-medium">{t('updates.currentVersion')}</p>
           <p className="text-2xl font-bold">v{currentVersion}</p>
         </div>
-        {renderStatusIcon()}
+        {/* {renderStatusIcon()} */}
       </div>
 
       {/* Status */}
-      <div className="flex items-center justify-between py-3 border-t border-b">
+      {/* <div className="flex items-center justify-between py-3 border-t border-b">
         <p className="text-sm text-muted-foreground">{renderStatusText()}</p>
         {renderAction()}
-      </div>
+      </div> */}
 
       {/* Download Progress */}
-      {status === 'downloading' && progress && (
+      {/* {status === 'downloading' && progress && (
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
             <span>
@@ -178,10 +178,10 @@ export function UpdateSettings() {
             {Math.round(progress.percent)}% complete
           </p>
         </div>
-      )}
+      )} */}
 
       {/* Update Info */}
-      {updateInfo && (status === 'available' || status === 'downloaded') && (
+      {/* {updateInfo && (status === 'available' || status === 'downloaded') && (
         <div className="rounded-lg bg-muted p-4 space-y-2">
           <div className="flex items-center justify-between">
             <p className="font-medium">Version {updateInfo.version}</p>
@@ -198,20 +198,18 @@ export function UpdateSettings() {
             </div>
           )}
         </div>
-      )}
+      )} */}
 
       {/* Error Details */}
-      {status === 'error' && error && (
+      {/* {status === 'error' && error && (
         <div className="rounded-lg bg-red-50 dark:bg-red-900/10 p-4 text-red-600 dark:text-red-400 text-sm">
           <p className="font-medium mb-1">{t('updates.errorDetails')}</p>
           <p>{error}</p>
         </div>
-      )}
+      )} */}
 
       {/* Help Text */}
-      <p className="text-xs text-muted-foreground">
-        {t('updates.help')}
-      </p>
+      {/* <p className="text-xs text-muted-foreground">{t('updates.help')}</p> */}
     </div>
   );
 }

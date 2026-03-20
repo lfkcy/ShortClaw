@@ -1,6 +1,6 @@
 {
     "name": "shortclaw",
-    "version": "0.2.7-alpha.0",
+    "version": "2026.3.19",
     "pnpm": {
         "onlyBuiltDependencies": [
             "@discordjs/opus",
