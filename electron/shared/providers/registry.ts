@@ -13,7 +13,7 @@ export const PROVIDER_DEFINITIONS: ProviderDefinition[] = [
     placeholder: 'ak-...',
     model: 'DeepSeek',
     requiresApiKey: true,
-    defaultBaseUrl: 'https://shortapi-api.wenuts.top/v1/chat/completions',
+    defaultBaseUrl: 'https://api.shortapi.ai/v1/chat/completions',
     showModelId: true,
     modelIdPlaceholder: 'deepseek/deepseek-v3.2',
     defaultModelId: 'deepseek/deepseek-v3.2',
@@ -23,7 +23,7 @@ export const PROVIDER_DEFINITIONS: ProviderDefinition[] = [
     defaultAuthMode: 'api_key',
     supportsMultipleAccounts: true,
     providerConfig: {
-      baseUrl: 'https://shortapi-api.wenuts.top/v1/chat/completions',
+      baseUrl: 'https://api.shortapi.ai/v1/chat/completions',
       api: 'openai-completions',
       apiKeyEnv: 'SHORTAPI_API_KEY',
       models: [
