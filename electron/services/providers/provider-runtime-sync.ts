@@ -4,6 +4,7 @@ import { getProviderSecret } from '../secrets/secret-store';
 import type { ProviderConfig } from '../../utils/secure-storage';
 import { getAllProviders, getApiKey, getDefaultProvider, getProvider } from '../../utils/secure-storage';
 import { getProviderConfig, getProviderDefaultModel } from '../../utils/provider-registry';
+import { getProviderDefinition } from '../../shared/providers/registry';
 import {
   removeProviderFromOpenClaw,
   saveOAuthTokenToOpenClaw,
@@ -41,17 +42,15 @@ function normalizeProviderBaseUrl(
     return normalized.replace(/\/v1$/, '').replace(/\/anthropic$/, '').replace(/\/$/, '') + '/anthropic';
   }
 
-  if (config.type === 'custom' || config.type === 'ollama') {
-    const protocol = apiProtocol || config.apiProtocol || 'openai-completions';
-    if (protocol === 'openai-responses') {
-      return normalized.replace(/\/responses?$/i, '');
-    }
-    if (protocol === 'openai-completions') {
-      return normalized.replace(/\/chat\/completions$/i, '');
-    }
-    if (protocol === 'anthropic-messages') {
-      return normalized.replace(/\/v1\/messages$/i, '').replace(/\/messages$/i, '');
-    }
+  const protocol = apiProtocol || config.apiProtocol;
+  if (protocol === 'openai-responses') {
+    return normalized.replace(/\/responses?$/i, '');
+  }
+  if (protocol === 'openai-completions' || config.type === 'shortapi') {
+    return normalized.replace(/\/chat\/completions$/i, '');
+  }
+  if (protocol === 'anthropic-messages') {
+    return normalized.replace(/\/v1\/messages$/i, '').replace(/\/messages$/i, '');
   }
 
   return normalized;
@@ -290,8 +289,10 @@ async function syncRuntimeProviderConfig(
   config: ProviderConfig,
   context: RuntimeProviderSyncContext,
 ): Promise<void> {
+  const definition = getProviderDefinition(config.type);
+  const isCustomizable = !!definition?.showBaseUrl;
   await syncProviderConfigToOpenClaw(context.runtimeProviderKey, config.model, {
-    baseUrl: normalizeProviderBaseUrl(config, config.baseUrl || context.meta?.baseUrl, context.api),
+    baseUrl: normalizeProviderBaseUrl(config, (isCustomizable ? config.baseUrl : undefined) || context.meta?.baseUrl, context.api),
     api: context.api,
     apiKeyEnv: context.meta?.apiKeyEnv,
     headers: context.meta?.headers,
@@ -367,11 +368,13 @@ export async function syncUpdatedProviderToRuntime(
 
   const defaultProviderId = await getDefaultProvider();
   if (defaultProviderId === config.id) {
+    const definition = getProviderDefinition(config.type);
+    const isCustomizable = !!definition?.showBaseUrl;
     const modelOverride = config.model ? `${ock}/${config.model}` : undefined;
     if (config.type !== 'custom') {
       if (shouldUseExplicitDefaultOverride(config, ock)) {
         await setOpenClawDefaultModelWithOverride(ock, modelOverride, {
-          baseUrl: normalizeProviderBaseUrl(config, config.baseUrl || context.meta?.baseUrl, context.api),
+          baseUrl: normalizeProviderBaseUrl(config, (isCustomizable ? config.baseUrl : undefined) || context.meta?.baseUrl, context.api),
           api: context.api,
           apiKeyEnv: context.meta?.apiKeyEnv,
           headers: context.meta?.headers,
@@ -453,11 +456,13 @@ export async function syncDefaultProviderToRuntime(
         api: provider.apiProtocol || 'openai-completions',
       }, fallbackModels);
     } else if (shouldUseExplicitDefaultOverride(provider, ock)) {
+      const definition = getProviderDefinition(provider.type);
+      const isCustomizable = !!definition?.showBaseUrl;
       await setOpenClawDefaultModelWithOverride(ock, modelOverride, {
         baseUrl: normalizeProviderBaseUrl(
           provider,
-          provider.baseUrl || getProviderConfig(provider.type)?.baseUrl,
-          provider.apiProtocol || getProviderConfig(provider.type)?.api,
+          (isCustomizable ? provider.baseUrl : undefined) || getProviderConfig(provider.type)?.baseUrl,
+          (isCustomizable ? provider.apiProtocol : undefined) || getProviderConfig(provider.type)?.api,
         ),
         api: provider.apiProtocol || getProviderConfig(provider.type)?.api,
         apiKeyEnv: getProviderConfig(provider.type)?.apiKeyEnv,

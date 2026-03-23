@@ -43,6 +43,7 @@ import { whatsAppLoginManager } from '../utils/whatsapp-login';
 import { getProviderConfig } from '../utils/provider-registry';
 import { deviceOAuthManager, OAuthProviderType } from '../utils/device-oauth';
 import { browserOAuthManager, type BrowserOAuthProviderType } from '../utils/browser-oauth';
+import { getProviderDefinition } from '../shared/providers/registry';
 import { applyProxySettings } from './proxy';
 import { syncLaunchAtStartupSettingFromStore } from './launch-at-startup';
 import { proxyAwareFetch } from '../utils/proxy-fetch';
@@ -318,9 +319,11 @@ function registerUnifiedRequestHandlers(gatewayManager: GatewayManager): void {
 
             const provider = await providerService.getLegacyProvider(providerId);
             const providerType = provider?.type || providerId;
+            const definition = getProviderDefinition(providerType);
             const registryBaseUrl = getProviderConfig(providerType)?.baseUrl;
-            const resolvedBaseUrl = options?.baseUrl || provider?.baseUrl || registryBaseUrl;
-            const resolvedProtocol = options?.apiProtocol || provider?.apiProtocol;
+            const isCustomizable = !!definition?.showBaseUrl;
+            const resolvedBaseUrl = (isCustomizable ? options?.baseUrl : undefined) || (isCustomizable ? provider?.baseUrl : undefined) || registryBaseUrl;
+            const resolvedProtocol = (isCustomizable ? options?.apiProtocol : undefined) || (isCustomizable ? provider?.apiProtocol : undefined) || provider?.apiProtocol;
             data = await validateApiKeyWithProvider(providerType, apiKey, {
               baseUrl: resolvedBaseUrl,
               apiProtocol: resolvedProtocol,
@@ -1965,10 +1968,9 @@ function registerProviderHandlers(gatewayManager: GatewayManager): void {
         // This allows validation during setup when provider hasn't been saved yet
         const providerType = provider?.type || providerId;
         const registryBaseUrl = getProviderConfig(providerType)?.baseUrl;
-        // Prefer caller-supplied baseUrl (live form value) over persisted config.
-        // This ensures Setup/Settings validation reflects unsaved edits immediately.
-        const resolvedBaseUrl = options?.baseUrl || provider?.baseUrl || registryBaseUrl;
-        const resolvedProtocol = options?.apiProtocol || provider?.apiProtocol;
+        const isCustomizable = !!getProviderDefinition(providerType)?.showBaseUrl;
+        const resolvedBaseUrl = (isCustomizable ? options?.baseUrl : undefined) || (isCustomizable ? provider?.baseUrl : undefined) || registryBaseUrl;
+        const resolvedProtocol = (isCustomizable ? options?.apiProtocol : undefined) || (isCustomizable ? provider?.apiProtocol : undefined) || provider?.apiProtocol;
 
         console.log(`[shortclaw-validate] validating provider type: ${providerType}`);
         return await validateApiKeyWithProvider(providerType, apiKey, {
