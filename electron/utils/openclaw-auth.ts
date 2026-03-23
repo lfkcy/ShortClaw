@@ -480,6 +480,7 @@ interface RuntimeProviderConfigOverride {
   baseUrl?: string;
   api?: string;
   apiKeyEnv?: string;
+  profile?: string;
   headers?: Record<string, string>;
   authHeader?: boolean;
 }
@@ -488,6 +489,7 @@ type ProviderEntryBuildOptions = {
   baseUrl: string;
   api: string;
   apiKeyEnv?: string;
+  profile?: string;
   headers?: Record<string, string>;
   authHeader?: boolean;
   modelIds?: string[];
@@ -557,6 +559,7 @@ function upsertOpenClawProviderEntry(
     models: mergeProviderModels(registryModels, existingModels, runtimeModels),
   };
   if (options.apiKeyEnv) nextProvider.apiKey = options.apiKeyEnv;
+  if (options.profile) nextProvider.profile = options.profile;
   if (options.headers && Object.keys(options.headers).length > 0) {
     nextProvider.headers = options.headers;
   } else {

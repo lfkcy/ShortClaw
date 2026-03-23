@@ -5,6 +5,7 @@ export interface SecretStore {
   get(accountId: string): Promise<ProviderSecret | null>;
   set(secret: ProviderSecret): Promise<void>;
   delete(accountId: string): Promise<void>;
+  listAccounts(): Promise<string[]>;
 }
 
 export class ElectronStoreSecretStore implements SecretStore {
@@ -60,6 +61,12 @@ export class ElectronStoreSecretStore implements SecretStore {
     const apiKeys = (store.get('apiKeys') ?? {}) as Record<string, string>;
     delete apiKeys[accountId];
     store.set('apiKeys', apiKeys);
+  }
+
+  async listAccounts(): Promise<string[]> {
+    const store = await getShortClawProviderStore();
+    const secrets = (store.get('providerSecrets') ?? {}) as Record<string, ProviderSecret>;
+    return Object.keys(secrets);
   }
 }
 

@@ -124,6 +124,8 @@ export const PROVIDER_TYPE_INFO: ProviderTypeInfo[] = [
     placeholder: 'ak-...',
     model: 'DeepSeek',
     requiresApiKey: true,
+    isOAuth: true,
+    supportsApiKey: true,
     defaultBaseUrl: 'https://shortapi.ai/console/keys/',
     showModelId: true,
     modelIdPlaceholder: 'deepseek/deepseek-v3.2',

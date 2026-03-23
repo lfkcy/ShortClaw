@@ -214,7 +214,7 @@ export async function handleProviderRoutes(
         accountId?: string;
         label?: string;
       }>(req);
-      if (body.provider === 'google' || body.provider === 'openai') {
+      if (body.provider === 'google' || body.provider === 'openai' || body.provider === 'shortapi') {
         await browserOAuthManager.startFlow(body.provider, {
           accountId: body.accountId,
           label: body.label,

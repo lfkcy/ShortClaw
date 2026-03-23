@@ -3,16 +3,18 @@ import { BrowserWindow, shell } from 'electron';
 import { logger } from './logger';
 import { loginGeminiCliOAuth, type GeminiCliOAuthCredentials } from './gemini-cli-oauth';
 import { loginOpenAICodexOAuth, type OpenAICodexOAuthCredentials } from './openai-codex-oauth';
+import { loginShortApiOAuth, type ShortApiOAuthCredentials } from './shortapi-oauth';
 import { getProviderService } from '../services/providers/provider-service';
 import { getSecretStore } from '../services/secrets/secret-store';
 import { saveOAuthTokenToOpenClaw } from './openclaw-auth';
 
-export type BrowserOAuthProviderType = 'google' | 'openai';
+export type BrowserOAuthProviderType = 'google' | 'openai' | 'shortapi';
 
 const GOOGLE_RUNTIME_PROVIDER_ID = 'google-gemini-cli';
 const GOOGLE_OAUTH_DEFAULT_MODEL = 'gemini-3-pro-preview';
 const OPENAI_RUNTIME_PROVIDER_ID = 'openai-codex';
 const OPENAI_OAUTH_DEFAULT_MODEL = 'gpt-5.3-codex';
+const SHORTAPI_RUNTIME_PROVIDER_ID = 'shortapi-oauth';
 
 class BrowserOAuthManager extends EventEmitter {
   private activeProvider: BrowserOAuthProviderType | null = null;
@@ -41,8 +43,8 @@ class BrowserOAuthManager extends EventEmitter {
     this.activeLabel = options?.label || null;
     this.emit('oauth:start', { provider, accountId: this.activeAccountId });
 
-    if (provider === 'openai') {
-      // OpenAI flow may switch to manual callback mode; keep start API non-blocking.
+    if (provider === 'openai' || provider === 'shortapi') {
+      // Flow may switch to manual callback mode; keep start API non-blocking.
       void this.executeFlow(provider);
       return true;
     }
@@ -75,33 +77,61 @@ class BrowserOAuthManager extends EventEmitter {
             },
           },
         })
-        : await loginOpenAICodexOAuth({
-          openUrl: async (url) => {
-            await shell.openExternal(url);
-          },
-          onProgress: (message) => logger.info(`[BrowserOAuth] ${message}`),
-          onManualCodeRequired: ({ authorizationUrl, reason }) => {
-            const message = reason === 'port_in_use'
-              ? 'OpenAI OAuth callback port 1455 is in use. Complete sign-in, then paste the final callback URL or code.'
-              : 'OpenAI OAuth callback timed out. Paste the final callback URL or code to continue.';
-            const payload = {
-              provider,
-              mode: 'manual' as const,
-              authorizationUrl,
-              message,
-            };
-            this.emit('oauth:code', payload);
-            if (this.mainWindow && !this.mainWindow.isDestroyed()) {
-              this.mainWindow.webContents.send('oauth:code', payload);
-            }
-          },
-          onManualCodeInput: async () => {
-            return await new Promise<string>((resolve, reject) => {
-              this.pendingManualCodeResolve = resolve;
-              this.pendingManualCodeReject = reject;
-            });
-          },
-        });
+        : provider === 'openai' 
+          ? await loginOpenAICodexOAuth({
+            openUrl: async (url) => {
+              await shell.openExternal(url);
+            },
+            onProgress: (message) => logger.info(`[BrowserOAuth] ${message}`),
+            onManualCodeRequired: ({ authorizationUrl, reason }) => {
+              const message = reason === 'port_in_use'
+                ? 'OpenAI OAuth callback port 1455 is in use. Complete sign-in, then paste the final callback URL or code.'
+                : 'OpenAI OAuth callback timed out. Paste the final callback URL or code to continue.';
+              const payload = {
+                provider,
+                mode: 'manual' as const,
+                authorizationUrl,
+                message,
+              };
+              this.emit('oauth:code', payload);
+              if (this.mainWindow && !this.mainWindow.isDestroyed()) {
+                this.mainWindow.webContents.send('oauth:code', payload);
+              }
+            },
+            onManualCodeInput: async () => {
+              return await new Promise<string>((resolve, reject) => {
+                this.pendingManualCodeResolve = resolve;
+                this.pendingManualCodeReject = reject;
+              });
+            },
+          })
+          : await loginShortApiOAuth({
+            openUrl: async (url) => {
+              await shell.openExternal(url);
+            },
+            onProgress: (message) => logger.info(`[BrowserOAuth] ${message}`),
+            onManualCodeRequired: ({ authorizationUrl, reason }) => {
+              const message = reason === 'port_in_use'
+                ? 'ShortAPI OAuth callback port 28775 is in use. Complete sign-in, then paste the URL or code.'
+                : 'ShortAPI OAuth callback timed out. Paste the final URL or code to continue.';
+              const payload = {
+                provider,
+                mode: 'manual' as const,
+                authorizationUrl,
+                message,
+              };
+              this.emit('oauth:code', payload);
+              if (this.mainWindow && !this.mainWindow.isDestroyed()) {
+                this.mainWindow.webContents.send('oauth:code', payload);
+              }
+            },
+            onManualCodeInput: async () => {
+              return await new Promise<string>((resolve, reject) => {
+                this.pendingManualCodeResolve = resolve;
+                this.pendingManualCodeReject = reject;
+              });
+            },
+          });
 
       await this.onSuccess(provider, token);
     } catch (error) {
@@ -145,7 +175,7 @@ class BrowserOAuthManager extends EventEmitter {
 
   private async onSuccess(
     providerType: BrowserOAuthProviderType,
-    token: GeminiCliOAuthCredentials | OpenAICodexOAuthCredentials,
+    token: GeminiCliOAuthCredentials | OpenAICodexOAuthCredentials | ShortApiOAuthCredentials,
   ) {
     const accountId = this.activeAccountId || providerType;
     const accountLabel = this.activeLabel;
@@ -160,9 +190,10 @@ class BrowserOAuthManager extends EventEmitter {
     const providerService = getProviderService();
     const existing = await providerService.getAccount(accountId);
     const isGoogle = providerType === 'google';
-    const runtimeProviderId = isGoogle ? GOOGLE_RUNTIME_PROVIDER_ID : OPENAI_RUNTIME_PROVIDER_ID;
-    const defaultModel = isGoogle ? GOOGLE_OAUTH_DEFAULT_MODEL : OPENAI_OAUTH_DEFAULT_MODEL;
-    const accountLabelDefault = isGoogle ? 'Google Gemini' : 'OpenAI Codex';
+    const isShortApi = providerType === 'shortapi';
+    const runtimeProviderId = isGoogle ? GOOGLE_RUNTIME_PROVIDER_ID : isShortApi ? SHORTAPI_RUNTIME_PROVIDER_ID : OPENAI_RUNTIME_PROVIDER_ID;
+    const defaultModel = isGoogle ? GOOGLE_OAUTH_DEFAULT_MODEL : isShortApi ? 'deepseek/deepseek-v3.2' : OPENAI_OAUTH_DEFAULT_MODEL;
+    const accountLabelDefault = isGoogle ? 'Google Gemini' : isShortApi ? 'ShortAPI (OAuth)' : 'OpenAI Codex';
     const oauthTokenEmail = 'email' in token && typeof token.email === 'string' ? token.email : undefined;
     const oauthTokenSubject = 'projectId' in token && typeof token.projectId === 'string'
       ? token.projectId
