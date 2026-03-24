@@ -104,7 +104,7 @@ When you target another agent with `@agent`, ShortClaw switches into that agent'
 ### 📡 Multi-Channel Management
 Configure and monitor multiple AI channels simultaneously. Each channel operates independently, allowing you to run specialized agents for different tasks.
 Each channel now supports multiple accounts, per-account agent binding, and switching the channel default account directly from the Channels page.
-ClawX now also bundles Tencent's official personal WeChat channel plugin, so you can link WeChat directly from the Channels page with an in-app QR flow.
+ShortClaw now also bundles Tencent's official personal WeChat channel plugin, so you can link WeChat directly from the Channels page with an in-app QR flow.
 
 ### ⏰ Cron-Based Automation
 Schedule AI tasks to run automatically. Define triggers, set intervals, and let your AI agents work around the clock without manual intervention.
@@ -262,14 +262,14 @@ ShortClaw employs a **dual-process architecture** with a unified host API layer.
 
 ### Process Model & Gateway Troubleshooting
 
-- ClawX is an Electron app, so **one app instance normally appears as multiple OS processes** (main/renderer/zygote/utility). This is expected.
+- ShortClaw is an Electron app, so **one app instance normally appears as multiple OS processes** (main/renderer/zygote/utility). This is expected.
 - Single-instance protection uses Electron's lock plus a local process-file lock fallback, preventing duplicate app launch in environments where desktop IPC/session bus is unstable.
 - During rolling upgrades, mixed old/new app versions can still have asymmetric protection behavior. For best reliability, upgrade all desktop clients to the same version.
 - The OpenClaw Gateway listener should still be **single-owner**: only one process should listen on `127.0.0.1:18789`.
 - To verify the active listener:
   - macOS/Linux: `lsof -nP -iTCP:18789 -sTCP:LISTEN`
   - Windows (PowerShell): `Get-NetTCPConnection -LocalPort 18789 -State Listen`
-- Clicking the window close button (`X`) hides ClawX to tray; it does **not** fully quit the app. Use tray menu **Quit ClawX** for complete shutdown.
+- Clicking the window close button (`X`) hides ShortClaw to tray; it does **not** fully quit the app. Use tray menu **Quit ShortClaw** for complete shutdown.
 
 ---
 

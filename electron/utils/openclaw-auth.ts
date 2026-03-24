@@ -785,7 +785,7 @@ export async function getActiveOpenClawProviders(): Promise<Set<string>> {
 
 /**
  * Read models.providers entries and agents.defaults.model from openclaw.json.
- * Used by ClawX to seed the provider store when it's empty but providers are
+ * Used by ShortClaw to seed the provider store when it's empty but providers are
  * configured externally (e.g. via CLI or by editing openclaw.json directly).
  */
 export async function getOpenClawProvidersConfig(): Promise<{
@@ -819,7 +819,7 @@ export async function getOpenClawProvidersConfig(): Promise<{
 }
 
 /**
- * Write the ClawX gateway token into ~/.openclaw/openclaw.json.
+ * Write the ShortClaw gateway token into ~/.openclaw/openclaw.json.
  */
 export async function syncGatewayTokenToConfig(token: string): Promise<void> {
   return withConfigLock(async () => {

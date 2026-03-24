@@ -6,7 +6,7 @@ import { withConfigLock } from './config-mutex';
 interface SyncProxyOptions {
   /**
    * When true, keep an existing channels.telegram.proxy value if proxy is
-   * currently disabled in ClawX settings.
+   * currently disabled in ShortClaw settings.
    */
   preserveExistingWhenDisabled?: boolean;
 }
@@ -35,7 +35,7 @@ export async function syncProxyConfigToOpenClaw(
     const currentProxy = typeof telegramConfig.proxy === 'string' ? telegramConfig.proxy : '';
 
     if (!settings.proxyEnabled && preserveExistingWhenDisabled && currentProxy) {
-      logger.info('Skipped Telegram proxy sync because ClawX proxy is disabled and preserve mode is enabled');
+      logger.info('Skipped Telegram proxy sync because ShortClaw proxy is disabled and preserve mode is enabled');
       return;
     }
 

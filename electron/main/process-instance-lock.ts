@@ -1,7 +1,7 @@
 import { closeSync, existsSync, mkdirSync, openSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-const LOCK_SCHEMA = 'clawx-instance-lock';
+const LOCK_SCHEMA = 'shortclaw-instance-lock';
 const LOCK_VERSION = 1;
 
 export interface ProcessInstanceFileLock {

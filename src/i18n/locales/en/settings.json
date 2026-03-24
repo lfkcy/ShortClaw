@@ -60,7 +60,7 @@
       "protocol": "Protocol",
       "advancedConfig": "Advanced configuration",
       "userAgent": "User-Agent",
-      "userAgentPlaceholder": "ClawX/1.0",
+      "userAgentPlaceholder": "ShortClaw/1.0",
       "fallbackModels": "Fallback Models",
       "fallbackProviders": "Fallback Providers",
       "fallbackModelIds": "Fallback Model IDs",

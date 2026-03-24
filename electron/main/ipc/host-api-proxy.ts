@@ -32,7 +32,7 @@ export function registerHostApiProxyHandlers(): void {
         }
       }
 
-      const response = await proxyAwareFetch(`http://127.0.0.1:${PORTS.CLAWX_HOST_API}${path}`, {
+      const response = await proxyAwareFetch(`http://127.0.0.1:${PORTS.SHORTCLAW_HOST_API}${path}`, {
         method,
         headers,
         body,

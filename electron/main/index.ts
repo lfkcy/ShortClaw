@@ -77,7 +77,7 @@ if (process.platform === 'linux') {
 // The losing process must exit immediately so it never reaches Gateway startup.
 const gotElectronLock = app.requestSingleInstanceLock();
 if (!gotElectronLock) {
-  console.info('[ClawX] Another instance already holds the single-instance lock; exiting duplicate process');
+  console.info('[ShortClaw] Another instance already holds the single-instance lock; exiting duplicate process');
   app.exit(0);
 }
 let releaseProcessInstanceFileLock: () => void = () => {};
@@ -86,7 +86,7 @@ if (gotElectronLock) {
   try {
     const fileLock = acquireProcessInstanceFileLock({
       userDataDir: app.getPath('userData'),
-      lockName: 'clawx',
+      lockName: 'shortclaw',
     });
     gotFileLock = fileLock.acquired;
     releaseProcessInstanceFileLock = fileLock.release;
@@ -97,12 +97,12 @@ if (gotElectronLock) {
           ? 'unknown lock format/content'
           : 'unknown owner';
       console.info(
-        `[ClawX] Another instance already holds process lock (${fileLock.lockPath}, ${ownerDescriptor}); exiting duplicate process`,
+        `[ShortClaw] Another instance already holds process lock (${fileLock.lockPath}, ${ownerDescriptor}); exiting duplicate process`,
       );
       app.exit(0);
     }
   } catch (error) {
-    console.warn('[ClawX] Failed to acquire process instance file lock; continuing with Electron single-instance lock only', error);
+    console.warn('[ShortClaw] Failed to acquire process instance file lock; continuing with Electron single-instance lock only', error);
   }
 }
 const gotTheLock = gotElectronLock && gotFileLock;

@@ -166,10 +166,10 @@ jobs:
       # #
       # # Actual latest.yml structure (from electron-builder NSIS):
       # #   files:
-      # #     - url: ClawX-0.2.4-win-x64.exe    ← files[] entries have url/sha512/size
+      # #     - url: ShortClaw-0.2.4-win-x64.exe    ← files[] entries have url/sha512/size
       # #       sha512: <base64>
       # #       size: 430775882
-      # #   path: ClawX-0.2.4-win-arm64.exe      ← top-level has path/sha512 (no size!)
+      # #   path: ShortClaw-0.2.4-win-arm64.exe      ← top-level has path/sha512 (no size!)
       # #   sha512: <base64>
       # #   releaseDate: '...'
       # - name: Update latest.yml sha512 after code signing
