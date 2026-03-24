@@ -34,6 +34,7 @@ export interface ProviderConfig {
   type: ProviderType;
   baseUrl?: string;
   apiProtocol?: 'openai-completions' | 'openai-responses' | 'anthropic-messages';
+  headers?: Record<string, string>;
   model?: string;
   fallbackModels?: string[];
   fallbackProviderIds?: string[];
@@ -146,7 +147,7 @@ export async function saveProvider(config: ProviderConfig): Promise<void> {
 
   const defaultProviderId = (s.get('defaultProvider') ?? null) as string | null;
   await saveProviderAccount(
-    providerConfigToAccount(config, { isDefault: defaultProviderId === config.id }),
+    providerConfigToAccount(config, { isDefault: defaultProviderId === config.id })
   );
 }
 
@@ -226,8 +227,10 @@ export async function setDefaultProvider(providerId: string): Promise<void> {
 export async function getDefaultProvider(): Promise<string | undefined> {
   await ensureProviderStoreMigrated();
   const s = await getShortClawProviderStore();
-  return (s.get('defaultProvider') as string | undefined)
-    ?? (s.get('defaultProviderAccountId') as string | undefined);
+  return (
+    (s.get('defaultProvider') as string | undefined) ??
+    (s.get('defaultProviderAccountId') as string | undefined)
+  );
 }
 
 /**
@@ -282,10 +285,16 @@ export async function getAllProvidersWithKeyInfo(): Promise<
     // → openClawKey = "custom-customa1"
     // This must match getOpenClawProviderKey() in ipc-handlers.ts exactly.
     const openClawKey = getOpenClawProviderKeyForType(provider.type, provider.id);
-    const isActive = activeOpenClawProviders.has(provider.type) || activeOpenClawProviders.has(provider.id) || activeOpenClawProviders.has(openClawKey);
+    const isActive =
+      activeOpenClawProviders.has(provider.type) ||
+      activeOpenClawProviders.has(provider.id) ||
+      activeOpenClawProviders.has(openClawKey);
     if (configMissing || (!isBuiltin && !isActive)) {
-      console.log(`[Sync] Provider ${provider.id} (${provider.type}) missing from OpenClaw, dropping from ShortClaw UI`);
-      await deleteProvider(provider.id);
+      console.log(
+        `[Sync] Provider ${provider.id} (${provider.type}) missing from OpenClaw, hiding from UI`
+      );
+      // Skip from display but don't delete from store — preserves API key
+      // associations so that restoring openclaw.json brings accounts back intact.
       continue;
     }
 

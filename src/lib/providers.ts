@@ -46,6 +46,7 @@ export interface ProviderConfig {
   type: ProviderType;
   baseUrl?: string;
   apiProtocol?: 'openai-completions' | 'openai-responses' | 'anthropic-messages';
+  headers?: Record<string, string>;
   model?: string;
   fallbackModels?: string[];
   fallbackProviderIds?: string[];
@@ -77,6 +78,9 @@ export interface ProviderTypeInfo {
   apiKeyUrl?: string;
   docsUrl?: string;
   docsUrlZh?: string;
+  codePlanPresetBaseUrl?: string;
+  codePlanPresetModelId?: string;
+  codePlanDocsUrl?: string;
 }
 
 export type ProviderAuthMode = 'api_key' | 'oauth_device' | 'oauth_browser' | 'local';
@@ -98,6 +102,7 @@ export interface ProviderAccount {
   authMode: ProviderAuthMode;
   baseUrl?: string;
   apiProtocol?: 'openai-completions' | 'openai-responses' | 'anthropic-messages';
+  headers?: Record<string, string>;
   model?: string;
   fallbackModels?: string[];
   fallbackAccountIds?: string[];
@@ -245,6 +250,9 @@ export const PROVIDER_TYPE_INFO: ProviderTypeInfo[] = [
     showModelId: true,
     modelIdPlaceholder: 'ep-20260228000000-xxxxx',
     docsUrl: 'https://www.volcengine.com/',
+    codePlanPresetBaseUrl: 'https://ark.cn-beijing.volces.com/api/coding/v3',
+    codePlanPresetModelId: 'ark-code-latest',
+    codePlanDocsUrl: 'https://www.volcengine.com/docs/82379/1928261?lang=zh',
   },
   {
     id: 'ollama',

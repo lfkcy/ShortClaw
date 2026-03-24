@@ -104,6 +104,7 @@ When you target another agent with `@agent`, ShortClaw switches into that agent'
 ### 📡 Multi-Channel Management
 Configure and monitor multiple AI channels simultaneously. Each channel operates independently, allowing you to run specialized agents for different tasks.
 Each channel now supports multiple accounts, per-account agent binding, and switching the channel default account directly from the Channels page.
+ClawX now also bundles Tencent's official personal WeChat channel plugin, so you can link WeChat directly from the Channels page with an in-app QR flow.
 
 ### ⏰ Cron-Based Automation
 Schedule AI tasks to run automatically. Define triggers, set intervals, and let your AI agents work around the clock without manual intervention.
@@ -120,6 +121,7 @@ Environment variables for bundled search skills:
 
 ### 🔐 Secure Provider Integration
 Connect to multiple AI providers (OpenAI, Anthropic, and more) with credentials stored securely in your system's native keychain. OpenAI supports both API key and browser OAuth (Codex subscription) sign-in.
+For **Custom** providers used with OpenAI-compatible gateways, you can set a custom `User-Agent` in **Settings → AI Providers → Edit Provider** for compatibility-sensitive endpoints.
 
 ### 🌙 Adaptive Theming
 Light mode, dark mode, or system-synchronized themes. ShortClaw adapts to your preferences automatically.
@@ -194,6 +196,8 @@ Notes:
 - If advanced proxy fields are left empty, ShortClaw falls back to `Proxy Server`.
 - Saving proxy settings reapplies Electron networking immediately and restarts the Gateway automatically.
 - ShortClaw also syncs the proxy to OpenClaw's Telegram channel config when Telegram is enabled.
+- Gateway restarts preserve an existing Telegram channel proxy if ShortClaw proxy is currently disabled.
+- To explicitly clear Telegram channel proxy from OpenClaw config, save proxy settings with proxy disabled.
 - In **Settings → Advanced → Developer**, you can run **OpenClaw Doctor** to execute `openclaw doctor --json` and inspect the diagnostic output without leaving the app.
 - On packaged Windows builds, the bundled `openclaw` CLI/TUI runs via the shipped `node.exe` entrypoint to keep terminal input behavior stable.
 
@@ -255,6 +259,17 @@ ShortClaw employs a **dual-process architecture** with a unified host API layer.
 - **Graceful Recovery**: Built-in reconnect, timeout, and backoff logic handles transient failures automatically
 - **Secure Storage**: API keys and sensitive data leverage the operating system's native secure storage mechanisms
 - **CORS-Safe by Design**: Local HTTP access is proxied by Main, preventing renderer-side CORS issues
+
+### Process Model & Gateway Troubleshooting
+
+- ClawX is an Electron app, so **one app instance normally appears as multiple OS processes** (main/renderer/zygote/utility). This is expected.
+- Single-instance protection uses Electron's lock plus a local process-file lock fallback, preventing duplicate app launch in environments where desktop IPC/session bus is unstable.
+- During rolling upgrades, mixed old/new app versions can still have asymmetric protection behavior. For best reliability, upgrade all desktop clients to the same version.
+- The OpenClaw Gateway listener should still be **single-owner**: only one process should listen on `127.0.0.1:18789`.
+- To verify the active listener:
+  - macOS/Linux: `lsof -nP -iTCP:18789 -sTCP:LISTEN`
+  - Windows (PowerShell): `Get-NetTCPConnection -LocalPort 18789 -State Listen`
+- Clicking the window close button (`X`) hides ClawX to tray; it does **not** fully quit the app. Use tray menu **Quit ClawX** for complete shutdown.
 
 ---
 

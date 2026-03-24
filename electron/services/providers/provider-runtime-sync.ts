@@ -324,7 +324,7 @@ async function syncRuntimeProviderConfig(
     ),
     api: context.api,
     apiKeyEnv: context.meta?.apiKeyEnv,
-    headers: context.meta?.headers,
+    headers: config.headers ?? context.meta?.headers,
   });
 }
 
@@ -417,7 +417,7 @@ export async function syncUpdatedProviderToRuntime(
             ),
             api: context.api,
             apiKeyEnv: context.meta?.apiKeyEnv,
-            headers: context.meta?.headers,
+            headers: config.headers ?? context.meta?.headers,
           },
           fallbackModels
         );
@@ -435,6 +435,7 @@ export async function syncUpdatedProviderToRuntime(
             config.apiProtocol || 'openai-completions'
           ),
           api: config.apiProtocol || 'openai-completions',
+          headers: config.headers,
         },
         fallbackModels
       );
@@ -517,6 +518,7 @@ export async function syncDefaultProviderToRuntime(
             provider.apiProtocol || 'openai-completions'
           ),
           api: provider.apiProtocol || 'openai-completions',
+          headers: provider.headers,
         },
         fallbackModels
       );
@@ -536,7 +538,7 @@ export async function syncDefaultProviderToRuntime(
           ),
           api: provider.apiProtocol || getProviderConfig(provider.type)?.api,
           apiKeyEnv: getProviderConfig(provider.type)?.apiKeyEnv,
-          headers: getProviderConfig(provider.type)?.headers,
+          headers: provider.headers ?? getProviderConfig(provider.type)?.headers,
         },
         fallbackModels
       );
