@@ -101,7 +101,7 @@
     "meta": {
         "telegram": {
             "description": "@BotFather からのボットトークンを使用して Telegram に接続します",
-            "docsUrl": "https://icnnp7d0dymg.feishu.cn/wiki/TjiGwxsMWi7hpDkDAQBc0ydMnEf#MEkKdqXP1orZU2x4SrFcdUHgnl1",
+            "docsUrl": "https://ojplhxamd4i1.jp.larksuite.com/wiki/MHIRwpnP4ir6mlkQ9QQjxIO1pac",
             "fields": {
                 "botToken": {
                     "label": "ボットトークン",
@@ -123,7 +123,7 @@
         },
         "discord": {
             "description": "Developer Portal からのボットトークンを使用して Discord に接続します",
-            "docsUrl": "https://icnnp7d0dymg.feishu.cn/wiki/BkOywJYCAiYRN9k4KTTceKPMnxg#QS6LdxnA2oNtfcxtFc8cgabnnNd",
+            "docsUrl": "https://ojplhxamd4i1.jp.larksuite.com/wiki/M2LwwiFBQiEKLhk9cqcj5HEIpQB",
             "fields": {
                 "token": {
                     "label": "ボットトークン",
@@ -151,7 +151,7 @@
         },
         "whatsapp": {
             "description": "QRコードをスキャンして WhatsApp に接続します（電話番号は不要です）",
-            "docsUrl": "https://icnnp7d0dymg.feishu.cn/wiki/ES7fwUfH8iGl8FkHYfFcyWB3n4d#doxcnUElomBZLi0NnKLUzn6zLbd",
+            "docsUrl": "https://ojplhxamd4i1.jp.larksuite.com/wiki/CVezwwUfpiyM38kJoQ7jumXspnc",
             "instructions": [
                 "携帯電話で WhatsApp を開きます",
                 "設定 > リンクされたデバイス > デバイスをリンク に移動します",
@@ -161,7 +161,7 @@
         },
         "wechat": {
             "description": "Tencent 公式の OpenClaw プラグインを使い、QRコードをスキャンして個人 WeChat に接続します",
-            "docsUrl": "https://icnnp7d0dymg.feishu.cn/wiki/GHYZwuPCriF0gWkXwkFcJ9zon3b",
+            "docsUrl": "https://ojplhxamd4i1.jp.larksuite.com/docx/DlmedF637oglTnxV6gujxc3rp0g",
             "instructions": [
                 "QRコードを生成すると、ShortClaw が OpenClaw に公式 WeChat プラグインをインストールして有効化します",
                 "以下の QR コードを WeChat でスキャンし、スマートフォン側で接続を確認します",
@@ -171,7 +171,7 @@
         },
         "dingtalk": {
             "description": "OpenClaw のチャンネルプラグイン経由で DingTalk に接続します（Stream モード）",
-            "docsUrl": "https://icnnp7d0dymg.feishu.cn/wiki/Y5eNwiSiZidkLskrwtJc1rUln0b#doxcnDgA78n43DbkiQjI1OqUA7b",
+            "docsUrl": "https://ojplhxamd4i1.jp.larksuite.com/wiki/LtMawO8euiSEzFknfvpjTWbLpff",
             "fields": {
                 "clientId": {
                     "label": "Client ID (AppKey)",
@@ -218,7 +218,7 @@
         },
         "feishu": {
             "description": "WebSocket 経由で Feishu/Lark ボットに接続します",
-            "docsUrl": "https://icnnp7d0dymg.feishu.cn/wiki/GKn8wOvHnibpPNkNkPzcAvGlnzK#GdHUdp9t9oqyegxwV8ScLvVGn1c",
+            "docsUrl": "https://ojplhxamd4i1.jp.larksuite.com/wiki/CRsZwS2Vpi0wsIkzgXBjiQuSpbc",
             "fields": {
                 "appId": {
                     "label": "App ID",
@@ -238,7 +238,7 @@
         },
         "wecom": {
             "description": "プラグイン経由で WeCom Bot (企業微信) に接続します",
-            "docsUrl": "https://icnnp7d0dymg.feishu.cn/wiki/JTGnwoV0RixKPtkr4w7c7gpAnDc",
+            "docsUrl": "https://ojplhxamd4i1.jp.larksuite.com/wiki/OMMgw61UQiCowCkhpV5jrTyypug",
             "fields": {
                 "botId": {
                     "label": "ボット ID",
@@ -384,7 +384,7 @@
                 "App ID と Client Secret を取得します",
                 "認証情報を入力します"
             ],
-            "docsUrl": "https://icnnp7d0dymg.feishu.cn/wiki/KPIJwlyiGiupMrkiS9ice39Zn2c"
+            "docsUrl": "https://ojplhxamd4i1.jp.larksuite.com/wiki/XTCIw1nmgiNVrbk4FEljnv5TpVg"
         }
     },
     "viewDocs": "ドキュメントを表示"

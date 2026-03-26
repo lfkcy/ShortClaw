@@ -58,7 +58,19 @@ describe('provider metadata', () => {
 
   it('keeps builtin provider sources in sync', () => {
     expect(BUILTIN_PROVIDER_TYPES).toEqual(
-      expect.arrayContaining(['anthropic', 'openai', 'google', 'openrouter', 'ark', 'moonshot', 'siliconflow', 'minimax-portal', 'minimax-portal-cn', 'qwen-portal', 'ollama'])
+      expect.arrayContaining([
+        'anthropic',
+        'openai',
+        'google',
+        'openrouter',
+        'ark',
+        'moonshot',
+        'siliconflow',
+        'minimax-portal',
+        'minimax-portal-cn',
+        'qwen-portal',
+        'ollama',
+      ])
     );
   });
 
@@ -87,16 +99,20 @@ describe('provider metadata', () => {
     expect(anthropic).toMatchObject({
       docsUrl: 'https://platform.claude.com/docs/en/api/overview',
     });
-    expect(getProviderDocsUrl(anthropic, 'en')).toBe('https://platform.claude.com/docs/en/api/overview');
+    expect(getProviderDocsUrl(anthropic, 'en')).toBe(
+      'https://platform.claude.com/docs/en/api/overview'
+    );
     expect(getProviderDocsUrl(openrouter, 'en')).toBe('https://openrouter.ai/models');
     expect(getProviderDocsUrl(moonshot, 'en')).toBe('https://platform.moonshot.cn/');
-    expect(getProviderDocsUrl(siliconflow, 'en')).toBe('https://docs.siliconflow.cn/cn/userguide/introduction');
+    expect(getProviderDocsUrl(siliconflow, 'en')).toBe(
+      'https://docs.siliconflow.cn/cn/userguide/introduction'
+    );
     expect(getProviderDocsUrl(ark, 'en')).toBe('https://www.volcengine.com/');
     expect(getProviderDocsUrl(custom, 'en')).toBe(
-      'https://icnnp7d0dymg.feishu.cn/wiki/BmiLwGBcEiloZDkdYnGc8RWnn6d#Ee1ldfvKJoVGvfxc32mcILwenth'
+      'https://ojplhxamd4i1.jp.larksuite.com/wiki/LC4Nw9LcviQeWKkxBZdjxmwTple'
     );
     expect(getProviderDocsUrl(custom, 'zh-CN')).toBe(
-      'https://icnnp7d0dymg.feishu.cn/wiki/BmiLwGBcEiloZDkdYnGc8RWnn6d#IWQCdfe5fobGU3xf3UGcgbLynGh'
+      'https://ojplhxamd4i1.jp.larksuite.com/wiki/LC4Nw9LcviQeWKkxBZdjxmwTple'
     );
   });
 
@@ -125,10 +141,14 @@ describe('provider metadata', () => {
     const ark = PROVIDER_TYPE_INFO.find((provider) => provider.id === 'ark');
 
     expect(resolveProviderModelForSave(openrouter, 'openai/gpt-5', false)).toBe('openai/gpt-5');
-    expect(resolveProviderModelForSave(siliconflow, 'Qwen/Qwen3-Coder-480B-A35B-Instruct', false)).toBe('Qwen/Qwen3-Coder-480B-A35B-Instruct');
+    expect(
+      resolveProviderModelForSave(siliconflow, 'Qwen/Qwen3-Coder-480B-A35B-Instruct', false)
+    ).toBe('Qwen/Qwen3-Coder-480B-A35B-Instruct');
 
     expect(resolveProviderModelForSave(openrouter, 'openai/gpt-5', true)).toBe('openai/gpt-5');
-    expect(resolveProviderModelForSave(siliconflow, 'Qwen/Qwen3-Coder-480B-A35B-Instruct', true)).toBe('Qwen/Qwen3-Coder-480B-A35B-Instruct');
+    expect(
+      resolveProviderModelForSave(siliconflow, 'Qwen/Qwen3-Coder-480B-A35B-Instruct', true)
+    ).toBe('Qwen/Qwen3-Coder-480B-A35B-Instruct');
 
     expect(resolveProviderModelForSave(openrouter, '   ', false)).toBe('openai/gpt-5.4');
     expect(resolveProviderModelForSave(openrouter, '   ', true)).toBe('openai/gpt-5.4');

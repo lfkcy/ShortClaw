@@ -1239,26 +1239,26 @@ export function Settings() {
                 >
                   {t('about.docs')}
                 </Button>
-                {/* <Button
+                <Button
                   variant="link"
                   className="h-auto p-0 text-[14px] text-blue-500 hover:text-blue-600 font-medium"
                   onClick={() =>
-                    window.electron.openExternal('https://github.com/ValueCell-ai/ShortClaw')
+                    window.electron.openExternal('https://github.com/ShortAILabs/ShortClaw')
                   }
                 >
                   {t('about.github')}
-                </Button> */}
-                {/* <Button
+                </Button>
+                <Button
                   variant="link"
                   className="h-auto p-0 text-[14px] text-blue-500 hover:text-blue-600 font-medium"
                   onClick={() =>
                     window.electron.openExternal(
-                      'https://icnnp7d0dymg.feishu.cn/wiki/UyfOwQ2cAiJIP6kqUW8cte5Bnlc'
+                      'https://ojplhxamd4i1.jp.larksuite.com/wiki/QGvNwdR1Li6hHhkWvnGjUgzDpch'
                     )
                   }
                 >
                   {t('about.faq')}
-                </Button> */}
+                </Button>
               </div>
             </div>
           </div>
