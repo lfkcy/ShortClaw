@@ -10,7 +10,7 @@ const readOpenClawConfigMock = vi.fn();
 const listAgentsSnapshotMock = vi.fn();
 const sendJsonMock = vi.fn();
 const proxyAwareFetchMock = vi.fn();
-const testOpenClawConfigDir = join(tmpdir(), 'clawx-tests', 'channel-routes-openclaw');
+const testOpenClawConfigDir = join(tmpdir(), 'shortclaw-tests', 'channel-routes-openclaw');
 
 vi.mock('@electron/utils/channel-config', () => ({
   cleanupDanglingWeChatPluginState: vi.fn(),

@@ -17,7 +17,7 @@
   ; Make stage logs visible on assisted installers (defaults to hidden).
   SetDetailsPrint both
   DetailPrint "Preparing installation..."
-  DetailPrint "Extracting ClawX runtime files. This can take a few minutes on slower disks or while antivirus scanning is active."
+  DetailPrint "Extracting ShortClaw runtime files. This can take a few minutes on slower disks or while antivirus scanning is active."
 
   ${nsProcess::FindProcess} "${APP_EXECUTABLE_FILENAME}" $R0
 

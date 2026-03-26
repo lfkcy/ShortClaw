@@ -24,7 +24,7 @@ function getElectronApp() {
     return (require('electron') as typeof import('electron')).app;
   }
 
-  const fallbackUserData = process.env.CLAWX_USER_DATA_DIR?.trim() || join(homedir(), '.clawx');
+  const fallbackUserData = process.env.SHORTCLAW_USER_DATA_DIR?.trim() || join(homedir(), '.shortclaw');
   const fallbackAppPath = process.cwd();
   const fallbackApp: ElectronAppLike = {
     isPackaged: false,
