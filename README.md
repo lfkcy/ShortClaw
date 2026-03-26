@@ -408,27 +408,6 @@ ShortClaw is built on the shoulders of excellent open-source projects:
 - [shadcn/ui](https://ui.shadcn.com/) – Beautifully designed components
 - [Zustand](https://github.com/pmndrs/zustand) – Lightweight state management
 
----
-
-## Community
-
-Join our community to connect with other users, get support, and share your experiences.
-
-| Enterprise WeChat | Feishu Group | Discord |
-| :---: | :---: | :---: |
-| <img src="src/assets/community/wecom-qr.png" width="150" alt="WeChat QR Code" /> | <img src="src/assets/community/feishu-qr.png" width="150" alt="Feishu QR Code" /> | <img src="src/assets/community/20260212-185822.png" width="150" alt="Discord QR Code" /> |
-
-### ShortClaw Partner Program 🚀
-
-We're launching the ShortClaw Partner Program and looking for partners who can help introduce ShortClaw to more clients, especially those with custom AI agent or automation needs.
-
-Partners help connect us with potential users and projects, while the ShortClaw team provides full technical support, customization, and integration.
-
-If you work with clients interested in AI tools or automation, we'd love to collaborate.
-
-DM us or email [public@valuecell.ai](mailto:public@valuecell.ai) to learn more.
-
----
 
 ## Star History
 
