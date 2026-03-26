@@ -32,6 +32,7 @@ import { getActiveOpenClawProviders, getOpenClawProvidersConfig } from '../../ut
 import { getAliasSourceTypes, getOpenClawProviderKeyForType } from '../../utils/provider-keys';
 import type { ProviderWithKeyInfo } from '../../shared/providers/types';
 import { logger } from '../../utils/logger';
+import { getSecretStore } from '../secrets/secret-store';
 
 function maskApiKey(apiKey: string | null): string | null {
   if (!apiKey) return null;
@@ -260,6 +261,14 @@ export class ProviderService {
 
   async deleteAccount(accountId: string): Promise<boolean> {
     await ensureProviderStoreMigrated();
+
+    // 清理 secret store
+    await getSecretStore().delete(accountId);
+
+    // 清理 provider account
+    await deleteProviderAccount(accountId);
+
+    // 清理 legacy provider store
     return deleteProvider(accountId);
   }
 

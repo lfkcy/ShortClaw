@@ -18,16 +18,28 @@ import {
   ExternalLink,
   Trash2,
   Cpu,
+  LogOut,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/stores/settings';
 import { useChatStore } from '@/stores/chat';
 import { useGatewayStore } from '@/stores/gateway';
 import { useAgentsStore } from '@/stores/agents';
+import { useUserStore } from '@/stores/user';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { Avatar } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 import { hostApiFetch } from '@/lib/host-api';
+import { subscribeHostEvent } from '@/lib/host-events';
 import { useTranslation } from 'react-i18next';
 import logoSvg from '@/assets/logo.svg';
 
@@ -57,21 +69,26 @@ function NavItem({ to, icon, label, badge, collapsed, onClick }: NavItemProps) {
         cn(
           'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[14px] font-medium transition-colors',
           'hover:bg-black/5 dark:hover:bg-white/5 text-foreground/80',
-          isActive
-            ? 'bg-black/5 dark:bg-white/10 text-foreground'
-            : '',
+          isActive ? 'bg-black/5 dark:bg-white/10 text-foreground' : '',
           collapsed && 'justify-center px-0'
         )
       }
     >
       {({ isActive }) => (
         <>
-          <div className={cn("flex shrink-0 items-center justify-center", isActive ? "text-foreground" : "text-muted-foreground")}>
+          <div
+            className={cn(
+              'flex shrink-0 items-center justify-center',
+              isActive ? 'text-foreground' : 'text-muted-foreground'
+            )}
+          >
             {icon}
           </div>
           {!collapsed && (
             <>
-              <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{label}</span>
+              <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
+                {label}
+              </span>
               {badge && (
                 <Badge variant="secondary" className="ml-auto shrink-0">
                   {badge}
@@ -143,6 +160,11 @@ export function Sidebar() {
   const agents = useAgentsStore((s) => s.agents);
   const fetchAgents = useAgentsStore((s) => s.fetchAgents);
 
+  const userProfile = useUserStore((s) => s.profile);
+  const isUserAuthenticated = useUserStore((s) => s.isAuthenticated);
+  const fetchUserProfile = useUserStore((s) => s.fetchProfile);
+  const userLogout = useUserStore((s) => s.logout);
+
   const navigate = useNavigate();
   const isOnChat = useLocation().pathname === '/';
 
@@ -167,7 +189,9 @@ export function Sidebar() {
   };
 
   const { t } = useTranslation(['common', 'chat']);
-  const [sessionToDelete, setSessionToDelete] = useState<{ key: string; label: string } | null>(null);
+  const [sessionToDelete, setSessionToDelete] = useState<{ key: string; label: string } | null>(
+    null
+  );
   const [nowMs, setNowMs] = useState(INITIAL_NOW_MS);
 
   useEffect(() => {
@@ -179,38 +203,73 @@ export function Sidebar() {
 
   useEffect(() => {
     void fetchAgents();
-  }, [fetchAgents]);
+    void fetchUserProfile();
+  }, [fetchAgents, fetchUserProfile]);
+
+  useEffect(() => {
+    void fetchUserProfile();
+  }, [isUserAuthenticated, fetchUserProfile]);
+
+  useEffect(() => {
+    const handleOAuthSuccess = async () => {
+      await fetchUserProfile();
+      const { useProviderStore } = await import('@/stores/providers');
+      await useProviderStore.getState().refreshProviderSnapshot();
+    };
+    const unsubscribe = subscribeHostEvent('oauth:success', handleOAuthSuccess);
+    return unsubscribe;
+  }, [fetchUserProfile]);
 
   const agentNameById = useMemo(
     () => Object.fromEntries((agents ?? []).map((agent) => [agent.id, agent.name])),
-    [agents],
+    [agents]
   );
-  const sessionBuckets: Array<{ key: SessionBucketKey; label: string; sessions: typeof sessions }> = [
-    { key: 'today', label: t('chat:historyBuckets.today'), sessions: [] },
-    { key: 'yesterday', label: t('chat:historyBuckets.yesterday'), sessions: [] },
-    { key: 'withinWeek', label: t('chat:historyBuckets.withinWeek'), sessions: [] },
-    { key: 'withinTwoWeeks', label: t('chat:historyBuckets.withinTwoWeeks'), sessions: [] },
-    { key: 'withinMonth', label: t('chat:historyBuckets.withinMonth'), sessions: [] },
-    { key: 'older', label: t('chat:historyBuckets.older'), sessions: [] },
-  ];
-  const sessionBucketMap = Object.fromEntries(sessionBuckets.map((bucket) => [bucket.key, bucket])) as Record<
-    SessionBucketKey,
-    (typeof sessionBuckets)[number]
-  >;
+  const sessionBuckets: Array<{ key: SessionBucketKey; label: string; sessions: typeof sessions }> =
+    [
+      { key: 'today', label: t('chat:historyBuckets.today'), sessions: [] },
+      { key: 'yesterday', label: t('chat:historyBuckets.yesterday'), sessions: [] },
+      { key: 'withinWeek', label: t('chat:historyBuckets.withinWeek'), sessions: [] },
+      { key: 'withinTwoWeeks', label: t('chat:historyBuckets.withinTwoWeeks'), sessions: [] },
+      { key: 'withinMonth', label: t('chat:historyBuckets.withinMonth'), sessions: [] },
+      { key: 'older', label: t('chat:historyBuckets.older'), sessions: [] },
+    ];
+  const sessionBucketMap = Object.fromEntries(
+    sessionBuckets.map((bucket) => [bucket.key, bucket])
+  ) as Record<SessionBucketKey, (typeof sessionBuckets)[number]>;
 
-  for (const session of [...sessions].sort((a, b) =>
-    (sessionLastActivity[b.key] ?? 0) - (sessionLastActivity[a.key] ?? 0)
+  for (const session of [...sessions].sort(
+    (a, b) => (sessionLastActivity[b.key] ?? 0) - (sessionLastActivity[a.key] ?? 0)
   )) {
     const bucketKey = getSessionBucket(sessionLastActivity[session.key] ?? 0, nowMs);
     sessionBucketMap[bucketKey].sessions.push(session);
   }
 
   const navItems = [
-    { to: '/models', icon: <Cpu className="h-[18px] w-[18px]" strokeWidth={2} />, label: t('sidebar.models') },
-    { to: '/agents', icon: <Bot className="h-[18px] w-[18px]" strokeWidth={2} />, label: t('sidebar.agents') },
-    { to: '/channels', icon: <Network className="h-[18px] w-[18px]" strokeWidth={2} />, label: t('sidebar.channels') },
-    { to: '/skills', icon: <Puzzle className="h-[18px] w-[18px]" strokeWidth={2} />, label: t('sidebar.skills') },
-    { to: '/cron', icon: <Clock className="h-[18px] w-[18px]" strokeWidth={2} />, label: t('sidebar.cronTasks') },
+    {
+      to: '/models',
+      icon: <Cpu className="h-[18px] w-[18px]" strokeWidth={2} />,
+      label: t('sidebar.models'),
+    },
+    {
+      to: '/agents',
+      icon: <Bot className="h-[18px] w-[18px]" strokeWidth={2} />,
+      label: t('sidebar.agents'),
+    },
+    {
+      to: '/channels',
+      icon: <Network className="h-[18px] w-[18px]" strokeWidth={2} />,
+      label: t('sidebar.channels'),
+    },
+    {
+      to: '/skills',
+      icon: <Puzzle className="h-[18px] w-[18px]" strokeWidth={2} />,
+      label: t('sidebar.skills'),
+    },
+    {
+      to: '/cron',
+      icon: <Clock className="h-[18px] w-[18px]" strokeWidth={2} />,
+      label: t('sidebar.cronTasks'),
+    },
   ];
 
   return (
@@ -221,7 +280,12 @@ export function Sidebar() {
       )}
     >
       {/* Top Header Toggle */}
-      <div className={cn("flex items-center p-2 h-12", sidebarCollapsed ? "justify-center" : "justify-between")}>
+      <div
+        className={cn(
+          'flex items-center p-2 h-12',
+          sidebarCollapsed ? 'justify-center' : 'justify-between'
+        )}
+      >
         {!sidebarCollapsed && (
           <div className="flex items-center gap-2 px-2 overflow-hidden">
             <img src={logoSvg} alt="ShortClaw" className="h-5 w-auto shrink-0" />
@@ -255,28 +319,28 @@ export function Sidebar() {
           className={cn(
             'flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-[14px] font-medium transition-colors mb-2',
             'bg-black/5 dark:bg-accent shadow-none border border-transparent text-foreground',
-            sidebarCollapsed && 'justify-center px-0',
+            sidebarCollapsed && 'justify-center px-0'
           )}
         >
           <div className="flex shrink-0 items-center justify-center text-foreground/80">
             <Plus className="h-[18px] w-[18px]" strokeWidth={2} />
           </div>
-          {!sidebarCollapsed && <span className="flex-1 text-left overflow-hidden text-ellipsis whitespace-nowrap">{t('sidebar.newChat')}</span>}
+          {!sidebarCollapsed && (
+            <span className="flex-1 text-left overflow-hidden text-ellipsis whitespace-nowrap">
+              {t('sidebar.newChat')}
+            </span>
+          )}
         </button>
 
         {navItems.map((item) => (
-          <NavItem
-            key={item.to}
-            {...item}
-            collapsed={sidebarCollapsed}
-          />
+          <NavItem key={item.to} {...item} collapsed={sidebarCollapsed} />
         ))}
       </nav>
 
       {/* Session list — below Settings, only when expanded */}
       {!sidebarCollapsed && sessions.length > 0 && (
         <div className="flex-1 overflow-y-auto overflow-x-hidden px-2 mt-4 space-y-0.5 pb-2">
-          {sessionBuckets.map((bucket) => (
+          {sessionBuckets.map((bucket) =>
             bucket.sessions.length > 0 ? (
               <div key={bucket.key} className="pt-2">
                 <div className="px-2.5 pb-1 text-[11px] font-medium text-muted-foreground/60 tracking-tight">
@@ -288,20 +352,25 @@ export function Sidebar() {
                   return (
                     <div key={s.key} className="group relative flex items-center">
                       <button
-                        onClick={() => { switchSession(s.key); navigate('/'); }}
+                        onClick={() => {
+                          switchSession(s.key);
+                          navigate('/');
+                        }}
                         className={cn(
                           'w-full text-left rounded-lg px-2.5 py-1.5 text-[13px] transition-colors pr-7',
                           'hover:bg-black/5 dark:hover:bg-white/5',
                           isOnChat && currentSessionKey === s.key
                             ? 'bg-black/5 dark:bg-white/10 text-foreground font-medium'
-                            : 'text-foreground/75',
+                            : 'text-foreground/75'
                         )}
                       >
                         <div className="flex min-w-0 items-center gap-2">
                           <span className="shrink-0 rounded-full bg-black/[0.04] px-2 py-0.5 text-[10px] font-medium text-foreground/70 dark:bg-white/[0.08]">
                             {agentName}
                           </span>
-                          <span className="truncate">{getSessionLabel(s.key, s.displayName, s.label)}</span>
+                          <span className="truncate">
+                            {getSessionLabel(s.key, s.displayName, s.label)}
+                          </span>
                         </div>
                       </button>
                       <button
@@ -316,7 +385,7 @@ export function Sidebar() {
                         className={cn(
                           'absolute right-1 flex items-center justify-center rounded p-0.5 transition-opacity',
                           'opacity-0 group-hover:opacity-100',
-                          'text-muted-foreground hover:text-destructive hover:bg-destructive/10',
+                          'text-muted-foreground hover:text-destructive hover:bg-destructive/10'
                         )}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -326,52 +395,120 @@ export function Sidebar() {
                 })}
               </div>
             ) : null
-          ))}
+          )}
         </div>
       )}
 
       {/* Footer */}
       <div className="p-2 mt-auto">
-        <NavLink
-            to="/settings"
-            className={({ isActive }) =>
-              cn(
-                'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[14px] font-medium transition-colors',
-                'hover:bg-black/5 dark:hover:bg-white/5 text-foreground/80',
-                isActive && 'bg-black/5 dark:bg-white/10 text-foreground',
-                sidebarCollapsed ? 'justify-center px-0' : ''
-              )
-            }
+        {/* User Avatar Row (only when ShortAPI OAuth authenticated) */}
+        {isUserAuthenticated && (
+          <div
+            className={cn(
+              'flex items-center gap-2.5 px-2.5',
+              sidebarCollapsed && 'justify-center px-0'
+            )}
           >
-          {({ isActive }) => (
-            <>
-              <div className={cn("flex shrink-0 items-center justify-center", isActive ? "text-foreground" : "text-muted-foreground")}>
-                <SettingsIcon className="h-[18px] w-[18px]" strokeWidth={2} />
-              </div>
-              {!sidebarCollapsed && <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{t('sidebar.settings')}</span>}
-            </>
-          )}
-        </NavLink>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="shrink-0 rounded-full outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-opacity hover:opacity-80">
+                  <Avatar src={userProfile?.avatar} name={userProfile?.name} size={28} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="top" align="start" className="w-56">
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">
+                      {userProfile?.name || 'User'}
+                    </p>
+                    {userProfile?.email && (
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {userProfile.email}
+                      </p>
+                    )}
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="cursor-pointer text-destructive focus:text-destructive"
+                  onClick={async () => {
+                    await userLogout();
+                    navigate('/models');
+                  }}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  {t('sidebar.logout')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-        <Button
-          variant="ghost"
-          className={cn(
-            'flex items-center gap-2.5 rounded-lg px-2.5 py-2 h-auto text-[14px] font-medium transition-colors w-full mt-1',
-            'hover:bg-black/5 dark:hover:bg-white/5 text-foreground/80',
-            sidebarCollapsed ? 'justify-center px-0' : 'justify-start'
-          )}
-          onClick={openDevConsole}
-        >
-          <div className="flex shrink-0 items-center justify-center text-muted-foreground">
-            <Terminal className="h-[18px] w-[18px]" strokeWidth={2} />
+            {/* Settings icon on the right when expanded */}
+            {!sidebarCollapsed && (
+              <NavLink
+                to="/settings"
+                className="ml-auto shrink-0 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <SettingsIcon className="h-[18px] w-[18px]" strokeWidth={2} />
+              </NavLink>
+            )}
           </div>
-          {!sidebarCollapsed && (
-            <>
-              <span className="flex-1 text-left overflow-hidden text-ellipsis whitespace-nowrap">{t('common:sidebar.openClawPage')}</span>
-              <ExternalLink className="h-3 w-3 shrink-0 ml-auto opacity-50 text-muted-foreground" />
-            </>
-          )}
-        </Button>
+        )}
+
+        {/* Settings nav (only when NOT authenticated — otherwise settings icon is inline above) */}
+        {!isUserAuthenticated && (
+          <>
+            <NavLink
+              to="/settings"
+              className={({ isActive }) =>
+                cn(
+                  'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[14px] font-medium transition-colors',
+                  'hover:bg-black/5 dark:hover:bg-white/5 text-foreground/80',
+                  isActive && 'bg-black/5 dark:bg-white/10 text-foreground',
+                  sidebarCollapsed ? 'justify-center px-0' : ''
+                )
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <div
+                    className={cn(
+                      'flex shrink-0 items-center justify-center',
+                      isActive ? 'text-foreground' : 'text-muted-foreground'
+                    )}
+                  >
+                    <SettingsIcon className="h-[18px] w-[18px]" strokeWidth={2} />
+                  </div>
+                  {!sidebarCollapsed && (
+                    <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
+                      {t('sidebar.settings')}
+                    </span>
+                  )}
+                </>
+              )}
+            </NavLink>
+            <Button
+              variant="ghost"
+              className={cn(
+                'flex items-center gap-2.5 rounded-lg px-2.5 py-2 h-auto text-[14px] font-medium transition-colors w-full mt-1',
+                'hover:bg-black/5 dark:hover:bg-white/5 text-foreground/80',
+                sidebarCollapsed ? 'justify-center px-0' : 'justify-start'
+              )}
+              onClick={openDevConsole}
+            >
+              <div className="flex shrink-0 items-center justify-center text-muted-foreground">
+                <Terminal className="h-[18px] w-[18px]" strokeWidth={2} />
+              </div>
+              {!sidebarCollapsed && (
+                <>
+                  <span className="flex-1 text-left overflow-hidden text-ellipsis whitespace-nowrap">
+                    {t('common:sidebar.openClawPage')}
+                  </span>
+                  <ExternalLink className="h-3 w-3 shrink-0 ml-auto opacity-50 text-muted-foreground" />
+                </>
+              )}
+            </Button>
+          </>
+        )}
       </div>
 
       <ConfirmDialog

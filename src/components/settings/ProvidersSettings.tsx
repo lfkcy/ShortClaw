@@ -23,6 +23,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { useUserStore } from '@/stores/user';
 import {
   useProviderStore,
   type ProviderAccount,
@@ -223,7 +224,16 @@ export function ProvidersSettings() {
 
   const handleDeleteProvider = async (providerId: string) => {
     try {
-      await removeAccount(providerId);
+      const account = accounts.find((a) => a.id === providerId);
+      const isShortApiOAuth = account?.vendorId === 'shortapi' && account?.authMode === 'oauth_browser';
+
+      if (isShortApiOAuth) {
+        // Sign out from ShortAPI in user store
+        // logout() handles account deletion and runtime sync on the backend
+        await useUserStore.getState().logout();
+      } else {
+        await removeAccount(providerId);
+      }
       toast.success(t('aiProviders.toast.deleted'));
     } catch (error) {
       toast.error(`${t('aiProviders.toast.failedDelete')}: ${error}`);
@@ -514,7 +524,7 @@ function ProviderCard({
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="h-[42px] w-[42px] shrink-0 flex items-center justify-center text-foreground border border-black/5 dark:border-white/10 rounded-full bg-black/5 dark:bg-white/5 shadow-sm group-hover:scale-105 transition-transform">
+          <div className="h-[42px] w-[42px] shrink-0 flex items-center justify-center text-foreground border border-black/5 dark:border-white/10 rounded-full bg-black/5 dark:bg-white/5 shadow-sm group-hover:scale-105 transition-transform overflow-hidden">
             {getProviderIconUrl(account.vendorId) ? (
               <img src={getProviderIconUrl(account.vendorId)} alt={typeInfo?.name || account.vendorId} className={cn('h-5 w-5', shouldInvertInDark(account.vendorId) && 'dark:invert')} />
             ) : (
@@ -1134,6 +1144,12 @@ function AddProviderDialog({
     // when either one already exists (account may have vendorId of either variant).
     const hasMinimax = existingVendorIds.has('minimax-portal') || existingVendorIds.has('minimax-portal-cn');
     if ((type.id === 'minimax-portal' || type.id === 'minimax-portal-cn') && hasMinimax) return false;
+
+    // ShortAPI special handling: only allow one account
+    const hasShortApi = Array.from(existingVendorIds).some(id => id === 'shortapi' || id === 'shortapi-oauth' || id.startsWith('shortapi-'));
+    if (type.id === 'shortapi' && hasShortApi) {
+      return false;
+    }
 
     const vendor = vendorMap.get(type.id);
     if (!vendor) {

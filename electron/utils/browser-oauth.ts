@@ -14,7 +14,7 @@ const GOOGLE_RUNTIME_PROVIDER_ID = 'google-gemini-cli';
 const GOOGLE_OAUTH_DEFAULT_MODEL = 'gemini-3-pro-preview';
 const OPENAI_RUNTIME_PROVIDER_ID = 'openai-codex';
 const OPENAI_OAUTH_DEFAULT_MODEL = 'gpt-5.3-codex';
-const SHORTAPI_RUNTIME_PROVIDER_ID = 'shortapi-oauth';
+const SHORTAPI_RUNTIME_PROVIDER_ID = 'shortapi';
 
 class BrowserOAuthManager extends EventEmitter {
   private activeProvider: BrowserOAuthProviderType | null = null;
@@ -193,7 +193,7 @@ class BrowserOAuthManager extends EventEmitter {
     const isShortApi = providerType === 'shortapi';
     const runtimeProviderId = isGoogle ? GOOGLE_RUNTIME_PROVIDER_ID : isShortApi ? SHORTAPI_RUNTIME_PROVIDER_ID : OPENAI_RUNTIME_PROVIDER_ID;
     const defaultModel = isGoogle ? GOOGLE_OAUTH_DEFAULT_MODEL : isShortApi ? 'deepseek/deepseek-v3.2' : OPENAI_OAUTH_DEFAULT_MODEL;
-    const accountLabelDefault = isGoogle ? 'Google Gemini' : isShortApi ? 'ShortAPI (OAuth)' : 'OpenAI Codex';
+    const accountLabelDefault = isGoogle ? 'Google Gemini' : isShortApi ? 'ShortAPI' : 'OpenAI Codex';
     const oauthTokenEmail = 'email' in token && typeof token.email === 'string' ? token.email : undefined;
     const oauthTokenSubject = 'projectId' in token && typeof token.projectId === 'string'
       ? token.projectId
@@ -214,7 +214,7 @@ class BrowserOAuthManager extends EventEmitter {
     const nextAccount = await providerService.createAccount({
       id: accountId,
       vendorId: providerType,
-      label: accountLabel || existing?.label || accountLabelDefault,
+      label: existing?.label || accountLabelDefault,
       authMode: 'oauth_browser',
       baseUrl: existing?.baseUrl,
       apiProtocol: existing?.apiProtocol,
@@ -249,6 +249,18 @@ class BrowserOAuthManager extends EventEmitter {
       email: oauthTokenEmail,
       projectId: oauthTokenSubject,
     });
+
+    try {
+      const { syncSavedProviderToRuntime } = await import('../services/providers/provider-runtime-sync');
+      const { providerAccountToConfig } = await import('../services/providers/provider-store');
+      await syncSavedProviderToRuntime(
+        providerAccountToConfig(nextAccount),
+        token.access,
+        this.mainWindow ? (this as any).gatewayManager : undefined // Hack: assuming gatewayManager might be available if I add it, but for now let's just use undefined or check context
+      );
+    } catch (err) {
+      logger.warn(`[BrowserOAuth] Failed to sync ${providerType} to runtime:`, err);
+    }
 
     this.emit('oauth:success', { provider: providerType, accountId: nextAccount.id });
     if (this.mainWindow && !this.mainWindow.isDestroyed()) {

@@ -95,9 +95,6 @@ async function resolveRuntimeProviderKey(config: ProviderConfig): Promise<string
     if (config.type === 'openai') {
       return OPENAI_OAUTH_RUNTIME_PROVIDER;
     }
-    if (config.type === 'shortapi') {
-      return 'shortapi-oauth';
-    }
   }
   return getOpenClawProviderKey(config.type, config.id);
 }
@@ -118,9 +115,6 @@ async function getBrowserOAuthRuntimeProvider(config: ProviderConfig): Promise<s
   }
   if (config.type === 'openai') {
     return OPENAI_OAUTH_RUNTIME_PROVIDER;
-  }
-  if (config.type === 'shortapi') {
-    return 'shortapi-oauth';
   }
   return null;
 }
@@ -700,17 +694,17 @@ export async function syncDefaultProviderToRuntime(
         const pCfg = getProviderConfig(provider.type);
         if (pCfg) {
           await setOpenClawDefaultModelWithOverride(
-            browserOAuthRuntimeProvider,
+            ock,
             modelOverride,
             {
               baseUrl: provider.baseUrl || pCfg.baseUrl,
               api: pCfg.api,
-              profile: 'shortapi-oauth:default',
+              profile: 'shortapi:default',
             },
             fallbackModels
           );
         } else {
-          await setOpenClawDefaultModel(browserOAuthRuntimeProvider, modelOverride, fallbackModels);
+          await setOpenClawDefaultModel(ock, modelOverride, fallbackModels);
         }
       } else {
         await setOpenClawDefaultModel(browserOAuthRuntimeProvider, modelOverride, fallbackModels);
