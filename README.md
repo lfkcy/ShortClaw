@@ -25,7 +25,7 @@
   <a href="https://discord.com/invite/84Kex3GGAh" target="_blank">
   <img src="https://img.shields.io/discord/1399603591471435907?logo=discord&labelColor=%20%235462eb&logoColor=%20%23f5f5f5&color=%20%235462eb" alt="chat on Discord" />
   </a>
-  <img src="https://img.shields.io/github/downloads/ValueCell-ai/ShortClaw/total?color=%23027DEB" alt="Downloads" />
+  <img src="https://img.shields.io/github/downloads/ShortAILabs/ShortClaw/total?color=%23027DEB" alt="Downloads" />
   <img src="https://img.shields.io/badge/license-MIT-green" alt="License" />
 </p>
 
@@ -146,13 +146,13 @@ In **Settings → General**, you can enable **Launch at system startup** so Shor
 
 #### Pre-built Releases (Recommended)
 
-Download the latest release for your platform from the [Releases](https://github.com/ValueCell-ai/ShortClaw/releases) page.
+Download the latest release for your platform from the [Releases](https://github.com/ShortAILabs/ShortClaw/releases) page.
 
 #### Build from Source
 
 ```bash
 # Clone the repository
-git clone https://github.com/ValueCell-ai/ShortClaw.git
+git clone https://github.com/ShortAILabs/ShortClaw.git
 cd ShortClaw
 
 # Initialize the project
@@ -412,7 +412,7 @@ ShortClaw is built on the shoulders of excellent open-source projects:
 ## Star History
 
 <p align="center">
-  <img src="https://api.star-history.com/svg?repos=ValueCell-ai/ShortClaw&type=Date" alt="Star History Chart" />
+  <img src="https://api.star-history.com/svg?repos=ShortAILabs/ShortClaw&type=Date" alt="Star History Chart" />
 </p>
 
 ---
@@ -424,5 +424,5 @@ ShortClaw is released under the [MIT License](LICENSE). You're free to use, modi
 ---
 
 <p align="center">
-  <sub>Built with ❤️ by the ValueCell Team</sub>
+  <sub>Built with ❤️ by the ShortAI Team</sub>
 </p>

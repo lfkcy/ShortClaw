@@ -54,7 +54,7 @@ publish:
     url: https://oss.intelli-spectrum.com/latest
     useMultipleRangeRequest: false
   - provider: github
-    owner: ValueCell-ai
+    owner: ShortApi-ai
     repo: ShortClaw
 
 # macOS Configuration
@@ -155,7 +155,7 @@ linux:
       arch:
         - x64
   category: Utility
-  maintainer: ShortClaw Team <public@valuecell.ai>
+  maintainer: ShortClaw Team <public@shortapi.ai>
   vendor: ShortClaw
   synopsis: AI Assistant powered by OpenClaw
   description: ShortClaw is a graphical AI assistant application that integrates with OpenClaw Gateway to provide intelligent automation and assistance across multiple messaging platforms.

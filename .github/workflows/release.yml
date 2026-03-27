@@ -131,8 +131,8 @@ jobs:
       #   with:
       #     api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
       #     organization-id: "78e37079-23df-4800-b41c-33312ad7c1e3"
-      #     project-slug: "ValueCell"
-      #     signing-policy-slug: "ValueCell-sign"
+      #     project-slug: "ShortApi"
+      #     signing-policy-slug: "ShortApi-sign"
       #     github-artifact-id: ${{ steps.upload-unsigned-windows-artifact.outputs.artifact-id }}
       #     wait-for-completion: true
       #     output-artifact-directory: release/signed
@@ -379,20 +379,19 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           TAG="${{ steps.version.outputs.tag }}"
-          CHANNEL="${{ steps.version.outputs.channel }}"
 
-          mkdir -p staging/${CHANNEL}
+          mkdir -p staging/apps
           mkdir -p staging/releases/${TAG}
 
           # Flatten all platform artifacts into staging directories
           find release-artifacts/ -type f | while read file; do
             filename=$(basename "$file")
-            cp "$file" "staging/${CHANNEL}/${filename}"
+            cp "$file" "staging/apps/${filename}"
             cp "$file" "staging/releases/${TAG}/${filename}"
           done
 
-          echo "=== staging/${CHANNEL}/ ==="
-          ls -lh staging/${CHANNEL}/
+          echo "=== staging/apps/ ==="
+          ls -lh staging/apps/
           echo ""
           echo "=== staging/releases/${TAG}/ ==="
           ls -lh staging/releases/${TAG}/
@@ -409,18 +408,15 @@ jobs:
       - name: Generate release-info.json
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          CHANNEL="${{ steps.version.outputs.channel }}"
-          BASE_URL="https://oss.intelli-spectrum.com/${CHANNEL}"
+          BASE_URL="https://file.shortapi.ai/apps"
 
           jq -n \
             --arg version "$VERSION" \
-            --arg channel "$CHANNEL" \
             --arg date "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             --arg base "$BASE_URL" \
             --arg changelog "https://github.com/${{ github.repository }}/releases/tag/v${VERSION}" \
             '{
               version: $version,
-              channel: $channel,
               releaseDate: $date,
               downloads: {
                 mac: {
@@ -440,10 +436,10 @@ jobs:
                 }
               },
               changelog: $changelog
-            }' > staging/${CHANNEL}/release-info.json
+            }' > staging/apps/release-info.json
 
           echo "=== release-info.json ==="
-          cat staging/${CHANNEL}/release-info.json
+          cat staging/apps/release-info.json
 
       - name: Install and configure ossutil
         env:
@@ -456,27 +452,25 @@ jobs:
           cat > $HOME/.ossutilconfig << EOF
           [Credentials]
           language=EN
-          endpoint=oss-cn-hangzhou.aliyuncs.com
+          endpoint=oss-us-east-1.aliyuncs.com
           accessKeyID=${OSS_ACCESS_KEY_ID}
           accessKeySecret=${OSS_ACCESS_KEY_SECRET}
           EOF
 
           ossutil --version
 
-      - name: 'Upload to OSS: {channel}/ (overwrite)'
+      - name: 'Upload to OSS: apps/ (overwrite)'
         run: |
-          CHANNEL="${{ steps.version.outputs.channel }}"
-
-          # Only clean the current channel's directory — never touch other channels
-          ossutil rm -r -f oss://valuecell-shortclaw/${CHANNEL}/ || true
+          # Skip cleanup - keep all versions in apps/
+          # ossutil rm -r -f oss://file-shortapi-ai/apps/ || true
 
           # Upload all files with no-cache so clients always get the freshest version
           ossutil cp -r -f \
             --meta="Cache-Control:no-cache,no-store,must-revalidate" \
-            staging/${CHANNEL}/ \
-            oss://valuecell-shortclaw/${CHANNEL}/
+            staging/apps/ \
+            oss://file-shortapi-ai/apps/
 
-          echo "Uploaded to ${CHANNEL}/"
+          echo "Uploaded to apps/"
 
       - name: 'Upload to OSS: releases/vX.Y.Z/ (archive)'
         run: |
@@ -485,7 +479,7 @@ jobs:
           # Upload to permanent archive (long cache, immutable)
           ossutil cp -r \
             staging/releases/${TAG}/ \
-            oss://valuecell-shortclaw/releases/${TAG}/ \
+            oss://file-shortapi-ai/apps/releases/${TAG}/ \
             --meta "Cache-Control:public,max-age=31536000,immutable"
 
           echo "Uploaded to releases/${TAG}/"
@@ -493,29 +487,23 @@ jobs:
       - name: Verify OSS upload
         run: |
           TAG="${{ steps.version.outputs.tag }}"
-          CHANNEL="${{ steps.version.outputs.channel }}"
 
-          echo "=== ${CHANNEL}/ ==="
-          ossutil ls oss://valuecell-shortclaw/${CHANNEL}/ --short
+          echo "=== apps/ ==="
+          ossutil ls oss://file-shortapi-ai/apps/ --short
 
           echo ""
           echo "=== releases/${TAG}/ ==="
-          ossutil ls oss://valuecell-shortclaw/releases/${TAG}/ --short
+          ossutil ls oss://file-shortapi-ai/apps/releases/${TAG}/ --short
 
           echo ""
           echo "=== Verify release-info.json ==="
-          ossutil cp oss://valuecell-shortclaw/${CHANNEL}/release-info.json /tmp/release-info.json -f
+          ossutil cp oss://file-shortapi-ai/apps/release-info.json /tmp/release-info.json -f
           jq . /tmp/release-info.json
 
           echo ""
           echo "=== Verify update yml ==="
-          if [ "${CHANNEL}" = "latest" ]; then
-            YML_PREFIX="latest"
-          else
-            YML_PREFIX="${CHANNEL}"
-          fi
-          echo "electron-updater expects ${YML_PREFIX}-mac.yml, ${YML_PREFIX}.yml, etc. in ${CHANNEL}/:"
-          ossutil ls oss://valuecell-shortclaw/${CHANNEL}/ --short | grep "${YML_PREFIX}.*\\.yml" || echo "(none found)"
+          echo "electron-updater expects latest-mac.yml, latest.yml, etc. in apps/:"
+          ossutil ls oss://file-shortapi-ai/apps/ --short | grep "latest.*\\.yml" || echo "(none found)"
 
           echo ""
           echo "All files uploaded and verified successfully!"

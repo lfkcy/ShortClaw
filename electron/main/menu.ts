@@ -182,7 +182,7 @@ export function createMenu(): void {
         {
           label: 'Report Issue',
           click: async () => {
-            await shell.openExternal('https://github.com/ValueCell-ai/ShortClaw/issues');
+            await shell.openExternal('https://github.com/ShortAILabs/ShortClaw/issues');
           },
         },
         { type: 'separator' },
