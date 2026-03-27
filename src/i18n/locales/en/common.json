@@ -10,6 +10,7 @@
         "settings": "Settings",
         "devConsole": "Developer Console",
         "models": "Models",
+        "office": "Office",
         "deleteSessionConfirm": "Are you sure you want to delete session \"{{label}}\"?",
         "openClawPage": "OpenClaw Page",
         "logout": "Logout"

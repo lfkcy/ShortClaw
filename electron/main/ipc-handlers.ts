@@ -76,6 +76,12 @@ import { validateApiKeyWithProvider } from '../services/providers/provider-valid
 import { appUpdater } from './updater';
 import { registerHostApiProxyHandlers } from './ipc/host-api-proxy';
 import {
+  handleOfficeGetLayout,
+  handleOfficeSaveLayout,
+  handleOfficeGetAgents,
+  handleOfficeGetContributions,
+} from '../api/office';
+import {
   isLaunchAtStartupKey,
   isProxyKey,
   mapAppErrorCode,
@@ -123,6 +129,9 @@ export function registerIpcHandlers(
 
   // Settings handlers
   registerSettingsHandlers(gatewayManager);
+
+  // Office handlers
+  registerOfficeHandlers(gatewayManager);
 
   // UV handlers
   registerUvHandlers();
@@ -2695,5 +2704,23 @@ function registerSessionHandlers(): void {
       logger.error(`[session:delete] Unexpected error for ${sessionKey}:`, err);
       return { success: false, error: String(err) };
     }
+  });
+}
+
+function registerOfficeHandlers(gatewayManager: GatewayManager): void {
+  ipcMain.handle('office:get-layout', async () => {
+    return await handleOfficeGetLayout();
+  });
+
+  ipcMain.handle('office:save-layout', async (_, layout: unknown) => {
+    return await handleOfficeSaveLayout(layout);
+  });
+
+  ipcMain.handle('office:get-agents', async () => {
+    return await handleOfficeGetAgents({ gatewayManager } as any);
+  });
+
+  ipcMain.handle('office:get-contributions', async () => {
+    return await handleOfficeGetContributions({ gatewayManager } as any);
   });
 }

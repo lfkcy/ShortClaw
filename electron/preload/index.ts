@@ -57,6 +57,11 @@ const electronAPI = {
         'settings:getAll',
         'settings:reset',
         'usage:recentTokenHistory',
+        // Office
+        'office:get-layout',
+        'office:save-layout',
+        'office:get-agents',
+        'office:get-contributions',
         // Update
         'update:status',
         'update:version',
