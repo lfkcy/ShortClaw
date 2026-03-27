@@ -1,4 +1,4 @@
-import { useI18n } from '@/lib/i18n'
+import { useTranslation } from 'react-i18next'
 
 interface EditActionBarProps {
   isDirty: boolean
@@ -27,7 +27,7 @@ const disabledBtnStyle: React.CSSProperties = {
 }
 
 export function EditActionBar({ isDirty, canUndo, canRedo, onUndo, onRedo, onSave, onReset }: EditActionBarProps) {
-  const { t } = useI18n()
+  const { t } = useTranslation()
 
   if (!isDirty && !canUndo && !canRedo) return null
 

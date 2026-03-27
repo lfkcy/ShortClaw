@@ -18,7 +18,7 @@ import {
   skipToNextTrack, unlockAudio, setSoundEnabled, isSoundEnabled,
 } from '@/lib/pixel-office/notificationSound'
 import { loadCharacterPNGs, loadWallPNG } from '@/lib/pixel-office/sprites/pngLoader'
-import { useI18n } from '@/lib/i18n'
+import { useTranslation } from 'react-i18next'
 import { EditorToolbar } from './EditorToolbar'
 import { EditActionBar } from './EditActionBar'
 
@@ -62,7 +62,8 @@ let cachedNextCharacterId = 1
 let spriteAssetsPromise: Promise<void> | null = null
 
 export default function PixelOfficePage() {
-  const { t, locale } = useI18n()
+  const { t, i18n } = useTranslation()
+  const locale = i18n.language
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const officeRef = useRef<OfficeState | null>(null)
