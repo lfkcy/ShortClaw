@@ -16,8 +16,15 @@ import { warmupNetworkOptimization } from '../utils/uv-env';
 import { initTelemetry } from '../utils/telemetry';
 
 import { ClawHubService } from '../gateway/clawhub';
-import { ensureShortClawContext, repairShortClawOnlyBootstrapFiles } from '../utils/openclaw-workspace';
-import { autoInstallCliIfNeeded, generateCompletionCache, installCompletionToProfile } from '../utils/openclaw-cli';
+import {
+  ensureShortClawContext,
+  repairShortClawOnlyBootstrapFiles,
+} from '../utils/openclaw-workspace';
+import {
+  autoInstallCliIfNeeded,
+  generateCompletionCache,
+  installCompletionToProfile,
+} from '../utils/openclaw-cli';
 import { isQuitting, setQuitting } from './app-state';
 import { applyProxySettings } from './proxy';
 import { syncLaunchAtStartupSettingFromStore } from './launch-at-startup';
@@ -35,7 +42,10 @@ import {
 import { createSignalQuitHandler } from './signal-quit';
 import { acquireProcessInstanceFileLock } from './process-instance-lock';
 import { getSetting } from '../utils/store';
-import { ensureBuiltinSkillsInstalled, ensurePreinstalledSkillsInstalled } from '../utils/skill-config';
+import {
+  ensureBuiltinSkillsInstalled,
+  ensurePreinstalledSkillsInstalled,
+} from '../utils/skill-config';
 import { ensureAllBundledPluginsInstalled } from '../utils/plugin-install';
 import { startHostApiServer } from '../api/server';
 import { HostEventBus } from '../api/event-bus';
@@ -77,7 +87,9 @@ if (process.platform === 'linux') {
 // The losing process must exit immediately so it never reaches Gateway startup.
 const gotElectronLock = app.requestSingleInstanceLock();
 if (!gotElectronLock) {
-  console.info('[ShortClaw] Another instance already holds the single-instance lock; exiting duplicate process');
+  console.info(
+    '[ShortClaw] Another instance already holds the single-instance lock; exiting duplicate process'
+  );
   app.exit(0);
 }
 let releaseProcessInstanceFileLock: () => void = () => {};
@@ -87,6 +99,7 @@ if (gotElectronLock) {
     const fileLock = acquireProcessInstanceFileLock({
       userDataDir: app.getPath('userData'),
       lockName: 'shortclaw',
+      force: true, // Electron lock already guarantees exclusivity; force-clean orphan/recycled-PID locks
     });
     gotFileLock = fileLock.acquired;
     releaseProcessInstanceFileLock = fileLock.release;
@@ -97,12 +110,15 @@ if (gotElectronLock) {
           ? 'unknown lock format/content'
           : 'unknown owner';
       console.info(
-        `[ShortClaw] Another instance already holds process lock (${fileLock.lockPath}, ${ownerDescriptor}); exiting duplicate process`,
+        `[ShortClaw] Another instance already holds process lock (${fileLock.lockPath}, ${ownerDescriptor}); exiting duplicate process`
       );
       app.exit(0);
     }
   } catch (error) {
-    console.warn('[ShortClaw] Failed to acquire process instance file lock; continuing with Electron single-instance lock only', error);
+    console.warn(
+      '[ShortClaw] Failed to acquire process instance file lock; continuing with Electron single-instance lock only',
+      error
+    );
   }
 }
 const gotTheLock = gotElectronLock && gotFileLock;
@@ -136,9 +152,7 @@ function getAppIcon(): Electron.NativeImage | undefined {
 
   const iconsDir = getIconsDir();
   const iconPath =
-    process.platform === 'win32'
-      ? join(iconsDir, 'icon.ico')
-      : join(iconsDir, 'icon.png');
+    process.platform === 'win32' ? join(iconsDir, 'icon.ico') : join(iconsDir, 'icon.png');
   const icon = nativeImage.createFromPath(iconPath);
   return icon.isEmpty() ? undefined : icon;
 }
@@ -293,17 +307,17 @@ async function initialize(): Promise<void> {
       delete headers['X-Frame-Options'];
       delete headers['x-frame-options'];
       if (headers['Content-Security-Policy']) {
-        headers['Content-Security-Policy'] = headers['Content-Security-Policy'].map(
-          (csp) => csp.replace(/frame-ancestors\s+'none'/g, "frame-ancestors 'self' *")
+        headers['Content-Security-Policy'] = headers['Content-Security-Policy'].map((csp) =>
+          csp.replace(/frame-ancestors\s+'none'/g, "frame-ancestors 'self' *")
         );
       }
       if (headers['content-security-policy']) {
-        headers['content-security-policy'] = headers['content-security-policy'].map(
-          (csp) => csp.replace(/frame-ancestors\s+'none'/g, "frame-ancestors 'self' *")
+        headers['content-security-policy'] = headers['content-security-policy'].map((csp) =>
+          csp.replace(/frame-ancestors\s+'none'/g, "frame-ancestors 'self' *")
         );
       }
       callback({ responseHeaders: headers });
-    },
+    }
   );
 
   // Register IPC handlers
@@ -449,12 +463,14 @@ async function initialize(): Promise<void> {
   // Auto-install openclaw CLI and shell completions (non-blocking).
   void autoInstallCliIfNeeded((installedPath) => {
     mainWindow?.webContents.send('openclaw:cli-installed', installedPath);
-  }).then(() => {
-    generateCompletionCache();
-    installCompletionToProfile();
-  }).catch((error) => {
-    logger.warn('CLI auto-install failed:', error);
-  });
+  })
+    .then(() => {
+      generateCompletionCache();
+      installCompletionToProfile();
+    })
+    .catch((error) => {
+      logger.warn('CLI auto-install failed:', error);
+    });
 }
 
 if (gotTheLock) {
@@ -488,7 +504,7 @@ if (gotTheLock) {
 
     const focusRequest = requestSecondInstanceFocus(
       mainWindowFocusState,
-      Boolean(mainWindow && !mainWindow.isDestroyed()),
+      Boolean(mainWindow && !mainWindow.isDestroyed())
     );
 
     if (focusRequest === 'focus-now') {
@@ -496,7 +512,9 @@ if (gotTheLock) {
       return;
     }
 
-    logger.debug('Main window is not ready yet; deferring second-instance focus until ready-to-show');
+    logger.debug(
+      'Main window is not ready yet; deferring second-instance focus until ready-to-show'
+    );
   });
 
   // Application lifecycle
@@ -533,7 +551,9 @@ if (gotTheLock) {
     event.preventDefault();
 
     if (action === 'cleanup-in-progress') {
-      logger.debug('Quit requested while cleanup already in progress; waiting for shutdown task to finish');
+      logger.debug(
+        'Quit requested while cleanup already in progress; waiting for shutdown task to finish'
+      );
       return;
     }
 
@@ -547,20 +567,25 @@ if (gotTheLock) {
       setTimeout(() => resolve('timeout'), 5000);
     });
 
-    void Promise.race([stopPromise.then(() => 'stopped' as const), timeoutPromise]).then((result) => {
-      if (result === 'timeout') {
-        logger.warn('Gateway shutdown timed out during app quit; proceeding with forced quit');
-        void gatewayManager.forceTerminateOwnedProcessForQuit().then((terminated) => {
-          if (terminated) {
-            logger.warn('Forced gateway process termination completed after quit timeout');
-          }
-        }).catch((err) => {
-          logger.warn('Forced gateway termination failed after quit timeout:', err);
-        });
+    void Promise.race([stopPromise.then(() => 'stopped' as const), timeoutPromise]).then(
+      (result) => {
+        if (result === 'timeout') {
+          logger.warn('Gateway shutdown timed out during app quit; proceeding with forced quit');
+          void gatewayManager
+            .forceTerminateOwnedProcessForQuit()
+            .then((terminated) => {
+              if (terminated) {
+                logger.warn('Forced gateway process termination completed after quit timeout');
+              }
+            })
+            .catch((err) => {
+              logger.warn('Forced gateway termination failed after quit timeout:', err);
+            });
+        }
+        markQuitCleanupCompleted(quitLifecycleState);
+        app.quit();
       }
-      markQuitCleanupCompleted(quitLifecycleState);
-      app.quit();
-    });
+    );
   });
 
   // Best-effort Gateway cleanup on unexpected crashes.
@@ -569,7 +594,9 @@ if (gotTheLock) {
   const emergencyGatewayCleanup = (reason: string, error: unknown): void => {
     logger.error(`${reason}:`, error);
     try {
-      void gatewayManager?.stop().catch(() => { /* ignore */ });
+      void gatewayManager?.stop().catch(() => {
+        /* ignore */
+      });
     } catch {
       // ignore — stop() may not be callable if state is corrupted
     }

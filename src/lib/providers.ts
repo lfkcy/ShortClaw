@@ -189,7 +189,7 @@ export const PROVIDER_TYPE_INFO: ProviderTypeInfo[] = [
     requiresApiKey: false,
     isOAuth: true,
     supportsApiKey: true,
-    defaultModelId: 'MiniMax-M2.5',
+    defaultModelId: 'MiniMax-M2.7',
     apiKeyUrl: 'https://platform.minimaxi.com/',
   },
   {
@@ -225,8 +225,8 @@ export const PROVIDER_TYPE_INFO: ProviderTypeInfo[] = [
     requiresApiKey: false,
     isOAuth: true,
     supportsApiKey: true,
-    defaultModelId: 'MiniMax-M2.5',
-    apiKeyUrl: 'https://intl.minimaxi.com/',
+    defaultModelId: 'MiniMax-M2.7',
+    apiKeyUrl: 'https://platform.minimax.io',
   },
   {
     id: 'qwen-portal',

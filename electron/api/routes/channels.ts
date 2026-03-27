@@ -53,22 +53,21 @@ import {
   listDiscordDirectoryGroupsFromConfig,
   listDiscordDirectoryPeersFromConfig,
   normalizeDiscordMessagingTarget,
-} from 'openclaw/plugin-sdk/discord';
-import {
   listTelegramDirectoryGroupsFromConfig,
   listTelegramDirectoryPeersFromConfig,
   normalizeTelegramMessagingTarget,
-} from 'openclaw/plugin-sdk/telegram';
-import {
   listSlackDirectoryGroupsFromConfig,
   listSlackDirectoryPeersFromConfig,
   normalizeSlackMessagingTarget,
-} from 'openclaw/plugin-sdk/slack';
-import {
-  listWhatsAppDirectoryGroupsFromConfig,
-  listWhatsAppDirectoryPeersFromConfig,
   normalizeWhatsAppMessagingTarget,
-} from 'openclaw/plugin-sdk/whatsapp';
+} from '../../utils/openclaw-sdk';
+
+// listWhatsAppDirectory*FromConfig were removed from openclaw's public exports
+// in 2026.3.23-1.  No-op stubs; WhatsApp target picker uses session discovery.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function listWhatsAppDirectoryGroupsFromConfig(_params: any): Promise<any[]> { return []; }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function listWhatsAppDirectoryPeersFromConfig(_params: any): Promise<any[]> { return []; }
 import type { HostApiContext } from '../context';
 import { parseJsonBody, sendJson } from '../route-utils';
 
@@ -196,7 +195,13 @@ function scheduleGatewayChannelRestart(ctx: HostApiContext, reason: string): voi
 // Plugin-based channels require a full Gateway process restart to properly
 // initialize / tear-down plugin connections.  SIGUSR1 in-process reload is
 // not sufficient for channel plugins (see restartGatewayForAgentDeletion).
-const FORCE_RESTART_CHANNELS = new Set(['dingtalk', 'wecom', 'whatsapp', 'feishu', 'qqbot', OPENCLAW_WECHAT_CHANNEL_TYPE]);
+// OpenClaw 3.23+ does not reliably support in-process channel reload for any
+// channel type.  All channel config saves must trigger a full Gateway process
+// restart to ensure the channel adapter properly initializes with the new config.
+const FORCE_RESTART_CHANNELS = new Set([
+  'dingtalk', 'wecom', 'whatsapp', 'feishu', 'qqbot', OPENCLAW_WECHAT_CHANNEL_TYPE,
+  'discord', 'telegram', 'signal', 'imessage', 'matrix', 'line', 'msteams', 'googlechat', 'mattermost',
+]);
 
 function scheduleGatewayChannelSaveRefresh(
   ctx: HostApiContext,

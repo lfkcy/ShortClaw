@@ -368,7 +368,7 @@
             ]
         },
         "qqbot": {
-            "description": "Connect QQ Bot via @sliverp/qqbot plugin",
+            "description": "Connect QQ Bot via @tencent-connect/openclaw-qqbot plugin",
             "docsUrl": "https://ojplhxamd4i1.jp.larksuite.com/wiki/XTCIw1nmgiNVrbk4FEljnv5TpVg",
             "fields": {
                 "appId": {

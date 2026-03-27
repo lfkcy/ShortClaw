@@ -369,7 +369,7 @@
             ]
         },
         "qqbot": {
-            "description": "通过 @sliverp/qqbot 插件连接 QQ 机器人",
+            "description": "通过 @tencent-connect/openclaw-qqbot 插件连接 QQ 机器人",
             "docsUrl": "https://ojplhxamd4i1.jp.larksuite.com/wiki/XTCIw1nmgiNVrbk4FEljnv5TpVg",
             "fields": {
                 "appId": {

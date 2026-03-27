@@ -1,6 +1,6 @@
 import { app } from 'electron';
 import path from 'path';
-import { existsSync, readFileSync, cpSync, mkdirSync, rmSync } from 'fs';
+import { existsSync, readFileSync, mkdirSync, rmSync } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
 
@@ -26,7 +26,7 @@ import { buildProxyEnv, resolveProxySettings } from '../utils/proxy';
 import { syncProxyConfigToOpenClaw } from '../utils/openclaw-proxy';
 import { logger } from '../utils/logger';
 import { prependPathEntry } from '../utils/env-path';
-import { copyPluginFromNodeModules, fixupPluginManifest } from '../utils/plugin-install';
+import { copyPluginFromNodeModules, fixupPluginManifest, cpSyncSafe } from '../utils/plugin-install';
 
 export interface GatewayLaunchContext {
   appSettings: Awaited<ReturnType<typeof getAllSettings>>;
@@ -47,9 +47,31 @@ const CHANNEL_PLUGIN_MAP: Record<string, { dirName: string; npmName: string }> =
   dingtalk: { dirName: 'dingtalk', npmName: '@soimy/dingtalk' },
   wecom: { dirName: 'wecom', npmName: '@wecom/wecom-openclaw-plugin' },
   feishu: { dirName: 'feishu-openclaw-plugin', npmName: '@larksuite/openclaw-lark' },
-  qqbot: { dirName: 'qqbot', npmName: '@sliverp/qqbot' },
+  qqbot: { dirName: 'qqbot', npmName: '@tencent-connect/openclaw-qqbot' },
   'openclaw-weixin': { dirName: 'openclaw-weixin', npmName: '@tencent-weixin/openclaw-weixin' },
 };
+
+/**
+ * OpenClaw 3.22+ ships Discord, Telegram, and other channels as built-in
+ * extensions.  If a previous ClawX version copied one of these into
+ * ~/.openclaw/extensions/, the broken copy overrides the working built-in
+ * plugin and must be removed.
+ */
+const BUILTIN_CHANNEL_EXTENSIONS = ['discord', 'telegram'];
+
+function cleanupStaleBuiltInExtensions(): void {
+  for (const ext of BUILTIN_CHANNEL_EXTENSIONS) {
+    const extDir = join(homedir(), '.openclaw', 'extensions', ext);
+    if (existsSync(fsPath(extDir))) {
+      logger.info(`[plugin] Removing stale built-in extension copy: ${ext}`);
+      try {
+        rmSync(fsPath(extDir), { recursive: true, force: true });
+      } catch (err) {
+        logger.warn(`[plugin] Failed to remove stale extension ${ext}:`, err);
+      }
+    }
+  }
+}
 
 function readPluginVersion(pkgJsonPath: string): string | null {
   try {
@@ -102,7 +124,7 @@ function ensureConfiguredPluginsUpgraded(configuredChannels: string[]): void {
         try {
           mkdirSync(fsPath(join(homedir(), '.openclaw', 'extensions')), { recursive: true });
           rmSync(fsPath(targetDir), { recursive: true, force: true });
-          cpSync(fsPath(bundledDir), fsPath(targetDir), { recursive: true, dereference: true });
+          cpSyncSafe(bundledDir, targetDir);
           fixupPluginManifest(targetDir);
         } catch (err) {
           logger.warn(`[plugin] Failed to ${isInstalled ? 'auto-upgrade' : 'install'} ${channelType} plugin:`, err);
@@ -149,6 +171,14 @@ export async function syncGatewayConfigBeforeLaunch(
     await cleanupDanglingWeChatPluginState();
   } catch (err) {
     logger.warn('Failed to clean dangling WeChat plugin state before launch:', err);
+  }
+
+  // Remove stale copies of built-in extensions (Discord, Telegram) that
+  // override OpenClaw's working built-in plugins and break channel loading.
+  try {
+    cleanupStaleBuiltInExtensions();
+  } catch (err) {
+    logger.warn('Failed to clean stale built-in extensions:', err);
   }
 
   // Auto-upgrade installed plugins before Gateway starts so that

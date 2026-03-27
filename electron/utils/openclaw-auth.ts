@@ -129,6 +129,19 @@ async function discoverAgentIds(): Promise<string[]> {
 const OPENCLAW_CONFIG_PATH = join(homedir(), '.openclaw', 'openclaw.json');
 const FEISHU_PLUGIN_ID_CANDIDATES = ['openclaw-lark', 'feishu-openclaw-plugin'] as const;
 const VALID_COMPACTION_MODES = new Set(['default', 'safeguard']);
+const BUILTIN_CHANNEL_IDS = new Set([
+  'discord',
+  'telegram',
+  'whatsapp',
+  'slack',
+  'signal',
+  'imessage',
+  'matrix',
+  'line',
+  'msteams',
+  'googlechat',
+  'mattermost',
+]);
 
 async function readOpenClawJson(): Promise<Record<string, unknown>> {
   return (await readJsonFile<Record<string, unknown>>(OPENCLAW_CONFIG_PATH)) ?? {};
@@ -1365,6 +1378,67 @@ export async function sanitizeOpenClawConfig(): Promise<void> {
             modified = true;
           }
         }
+      }
+
+      // ── Reconcile built-in channels with restrictive plugin allowlists ──
+      // If plugins.allow is active because an external plugin is configured,
+      // configured built-in channels must also be present or they will be
+      // blocked on restart. If the allowlist only contains built-ins, drop it.
+      const configuredBuiltIns = new Set<string>();
+      const channelsObj = config.channels as Record<string, Record<string, unknown>> | undefined;
+      if (channelsObj && typeof channelsObj === 'object') {
+        for (const [channelId, section] of Object.entries(channelsObj)) {
+          if (!BUILTIN_CHANNEL_IDS.has(channelId)) continue;
+          if (!section || section.enabled === false) continue;
+          if (Object.keys(section).length > 0) {
+            configuredBuiltIns.add(channelId);
+          }
+        }
+      }
+
+      if (pEntries.whatsapp) {
+        delete pEntries.whatsapp;
+        console.log('[sanitize] Removed legacy plugins.entries.whatsapp for built-in channel');
+        modified = true;
+      }
+
+      const externalPluginIds = allowArr2.filter((pluginId) => !BUILTIN_CHANNEL_IDS.has(pluginId));
+      let nextAllow = [...externalPluginIds];
+      if (externalPluginIds.length > 0) {
+        for (const channelId of configuredBuiltIns) {
+          if (!nextAllow.includes(channelId)) {
+            nextAllow.push(channelId);
+            modified = true;
+            console.log(`[sanitize] Added configured built-in channel "${channelId}" to plugins.allow`);
+          }
+        }
+      }
+
+      if (JSON.stringify(nextAllow) !== JSON.stringify(allowArr2)) {
+        if (nextAllow.length > 0) {
+          pluginsObj.allow = nextAllow;
+        } else {
+          delete pluginsObj.allow;
+        }
+        modified = true;
+      }
+
+      if (Array.isArray(pluginsObj.allow) && pluginsObj.allow.length === 0) {
+        delete pluginsObj.allow;
+        modified = true;
+      }
+      if (pluginsObj.entries && Object.keys(pEntries).length === 0) {
+        delete pluginsObj.entries;
+        modified = true;
+      }
+      const pluginKeysExcludingEnabled = Object.keys(pluginsObj).filter((key) => key !== 'enabled');
+      if (pluginsObj.enabled === true && pluginKeysExcludingEnabled.length === 0) {
+        delete pluginsObj.enabled;
+        modified = true;
+      }
+      if (Object.keys(pluginsObj).length === 0) {
+        delete config.plugins;
+        modified = true;
       }
     }
 
