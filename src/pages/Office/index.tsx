@@ -29,13 +29,11 @@ import { loadCharacterPNGs, loadWallPNG } from '@/lib/pixel-office/sprites/pngLo
 import { useTranslation } from 'react-i18next'
 import { EditorToolbar } from './EditorToolbar'
 import { EditActionBar } from './EditActionBar'
+import { AgentCard, type AgentCardAgent } from './AgentCard'
 
-// Placeholder types for agent card (original import not available)
-type AgentCardAgent = any
 type AgentModelTestResult = any
 type AgentSessionTestResult = any
 type PlatformTestResult = any
-const AgentCard = ({ agent }: { agent: any }) => null
 
 function formatTokens(n: number): string {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M'
