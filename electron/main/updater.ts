@@ -63,10 +63,26 @@ export class AppUpdater extends EventEmitter {
     autoUpdater.autoInstallOnAppQuit = true;
     
     autoUpdater.logger = {
-      info: (msg: string) => logger.info('[Updater]', msg),
-      warn: (msg: string) => logger.warn('[Updater]', msg),
-      error: (msg: string) => logger.error('[Updater]', msg),
-      debug: (msg: string) => logger.debug('[Updater]', msg),
+      info: (msg: string) => {
+        if (!msg.toLowerCase().includes('clawx')) {
+          logger.info('[Updater]', msg);
+        }
+      },
+      warn: (msg: string) => {
+        if (!msg.toLowerCase().includes('clawx')) {
+          logger.warn('[Updater]', msg);
+        }
+      },
+      error: (msg: string) => {
+        if (!msg.toLowerCase().includes('clawx')) {
+          logger.error('[Updater]', msg);
+        }
+      },
+      debug: (msg: string) => {
+        if (!msg.toLowerCase().includes('clawx')) {
+          logger.debug('[Updater]', msg);
+        }
+      },
     };
 
     // Override feed URL for prerelease channels so that
