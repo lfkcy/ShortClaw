@@ -16,7 +16,7 @@ const openclawResolvedPath = getOpenClawResolvedDir();
 const openclawRequire = createRequire(join(openclawResolvedPath, 'package.json'));
 // Fallback: resolves from the symlink path (`node_modules/openclaw`).
 // In dev mode, Node walks UP from here to `<project>/node_modules/`, which
-// contains ClawX's own devDependencies — packages that are NOT deps of openclaw
+// contains ShortClaw's own devDependencies — packages that are NOT deps of openclaw
 // (e.g. @whiskeysockets/baileys) become resolvable through pnpm hoisting.
 const projectRequire = createRequire(join(openclawPath, 'package.json'));
 
@@ -26,7 +26,7 @@ function resolveOpenClawPackageJson(packageName: string): string {
     try {
         return openclawRequire.resolve(specifier);
     } catch { /* fall through */ }
-    // 2. Fallback to project-level deps (works in dev mode for ClawX devDependencies)
+    // 2. Fallback to project-level deps (works in dev mode for ShortClaw devDependencies)
     try {
         return projectRequire.resolve(specifier);
     } catch (err) {
