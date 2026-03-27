@@ -39,7 +39,7 @@
 - ✅ 布局保存和加载
 - ✅ 音效和背景音乐
 - ✅ 多语言支持（中文/英文）
-- ⚠️ Bug 系统（可选，后续可添加）
+- ❌ Bug 系统（不迁移，减少复杂度）
 
 ## 架构设计
 
@@ -186,7 +186,58 @@ import { Office } from './pages/Office';
 <Route path="/office" element={<Office />} />
 ```
 
-### 3. IPC 通信接口
+### 3. Gateway API 规范
+
+ShortClaw 通过 Gateway RPC 与 OpenClaw 通信。Gateway 使用统一的 RPC 协议：
+
+**协议格式：**
+```typescript
+// 请求
+{
+  module: string;    // 模块名，如 'agent', 'session'
+  action: string;    // 操作名，如 'list', 'get'
+  payload?: unknown; // 可选参数
+}
+
+// 响应
+{
+  ok: boolean;
+  data?: unknown;
+  error?: { code: string; message: string; }
+}
+```
+
+**Office 页面需要的 Gateway API：**
+
+1. **获取代理列表**
+   - Module: `agent`
+   - Action: `list`
+   - Payload: `{}`
+   - Response: `{ agents: Array<{ id, name, status, ... }> }`
+
+2. **获取会话列表**
+   - Module: `session`
+   - Action: `list`
+   - Payload: `{}`
+   - Response: `{ sessions: Array<{ key, agentId, lastActivity, ... }> }`
+
+3. **获取代理活动统计**
+   - Module: `agent`
+   - Action: `getStats`
+   - Payload: `{ agentId: string }`
+   - Response: `{ messageCount, tokenUsage, lastActive }`
+
+**Gateway 客户端调用方式：**
+```typescript
+// 在 Main Process 中
+const result = await gatewayManager.rpc({
+  module: 'agent',
+  action: 'list',
+  payload: {}
+});
+```
+
+### 4. IPC 通信接口
 
 #### Main Process 端点
 
@@ -203,12 +254,24 @@ import { Office } from './pages/Office';
 **office:get-agents**
 - 功能：获取代理列表和状态
 - 返回：`{ agents: AgentData[] }`
-- 数据源：Gateway API
+- 实现：调用 Gateway RPC `agent.list`
 
 **office:get-contributions**
 - 功能：获取代理贡献数据（用于热力图）
 - 返回：`{ contributions: Record<string, number> }`
-- 数据源：Gateway API
+- 实现：调用 Gateway RPC `agent.getStats` 并聚合数据
+
+#### Preload 脚本更新
+
+在 `electron/preload/index.ts` 的 `validChannels` 数组中添加：
+
+```typescript
+// Office
+'office:get-layout',
+'office:save-layout',
+'office:get-agents',
+'office:get-contributions',
+```
 
 #### 数据类型定义
 
@@ -228,45 +291,195 @@ interface OfficeLayout {
   width: number;
   height: number;
 }
+
+// 默认布局
+const DEFAULT_LAYOUT: OfficeLayout = {
+  version: 1,
+  width: 20,
+  height: 15,
+  tiles: [], // 空数组，将在运行时生成默认地板
+  furniture: [
+    // 默认放置一些基础家具
+    { id: 'desk-1', type: 'desk', x: 5, y: 5, rotation: 0 },
+    { id: 'chair-1', type: 'chair', x: 5, y: 6, rotation: 0 },
+  ]
+}
 ```
 
-### 4. 数据适配层
+### 5. 数据适配层实现
 
 在 `src/lib/pixel-office/agentBridge.ts` 中实现适配逻辑：
 
-**功能：**
-- 从 IPC 获取代理数据
-- 转换为 pixel-office 需要的 Character 格式
-- 映射代理状态到角色动画状态
-- 处理代理活动信息
-
-**状态映射：**
-- `idle` → 角色坐着或站立
-- `busy` → 角色在电脑前工作
-- `offline` → 角色不显示或灰色
-
-### 5. 文件路径适配
-
-**原项目（Next.js）：**
+**核心功能：**
 ```typescript
-fetch('/api/pixel-office/layout')
+// 轮询获取代理数据
+export async function fetchAgentData(): Promise<AgentData[]> {
+  const result = await window.electron.ipcRenderer.invoke('office:get-agents');
+  return result.agents || [];
+}
+
+// 转换为 Character 对象
+export function agentDataToCharacters(agents: AgentData[]): Character[] {
+  return agents.map((agent, index) => ({
+    id: agent.id,
+    name: agent.name,
+    state: mapAgentStatusToCharacterState(agent.status),
+    variant: index % 9, // 循环使用 9 个角色精灵
+    x: 0, y: 0, // 初始位置，由布局系统分配
+    activity: agent.activity,
+  }));
+}
+
+// 状态映射
+function mapAgentStatusToCharacterState(status: string): CharacterState {
+  switch (status) {
+    case 'busy': return CharacterState.WORKING;
+    case 'idle': return CharacterState.SITTING;
+    case 'offline': return CharacterState.IDLE;
+    default: return CharacterState.IDLE;
+  }
+}
 ```
 
-**新项目（Electron）：**
+**React Hook 接口：**
 ```typescript
-window.electron.ipcRenderer.invoke('office:get-layout')
+export function useAgentData(pollingInterval = 5000) {
+  const [agents, setAgents] = useState<AgentData[]>([]);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function poll() {
+      try {
+        const data = await fetchAgentData();
+        if (!cancelled) setAgents(data);
+      } catch (err) {
+        if (!cancelled) setError(err as Error);
+      }
+    }
+
+    poll(); // 立即执行一次
+    const timer = setInterval(poll, pollingInterval);
+
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [pollingInterval]);
+
+  return { agents, error };
+}
 ```
 
-**资源路径：**
-- 原项目：`/assets/pixel-office/characters/char_0.png`
-- 新项目：需要通过 Vite 的资源处理或使用绝对路径
+### 6. 资源路径处理
+
+**策略：使用 Vite 的 `?url` 导入**
+
+在组件中导入静态资源：
+```typescript
+// 导入角色精灵图
+import char0 from '@/assets/pixel-office/characters/char_0.png?url';
+import char1 from '@/assets/pixel-office/characters/char_1.png?url';
+// ... 其他资源
+
+// 在代码中使用
+const characterSprites = [char0, char1, char2, ...];
+```
+
+**资源加载示例：**
+```typescript
+// src/lib/pixel-office/sprites/pngLoader.ts
+export async function loadCharacterPNGs(): Promise<HTMLImageElement[]> {
+  const sprites = [
+    await import('@/assets/pixel-office/characters/char_0.png?url'),
+    await import('@/assets/pixel-office/characters/char_1.png?url'),
+    // ... 其他 7 个
+  ];
+
+  return Promise.all(
+    sprites.map(s => {
+      const img = new Image();
+      img.src = s.default;
+      return new Promise<HTMLImageElement>((resolve) => {
+        img.onload = () => resolve(img);
+      });
+    })
+  );
+}
+```
+
+**开发环境 vs 生产环境：**
+- 开发环境：Vite dev server 提供资源
+- 生产环境：资源打包到 `dist/renderer/assets/`，路径自动处理
 
 ### 6. 布局存储位置
 
 - 原项目：`~/.openclaw/pixel-office/layout.json`
 - 新项目：`{app.getPath('userData')}/pixel-office/layout.json`
 
-### 7. 国际化
+### 7. 音频系统
+
+**实现方式：**
+- 使用浏览器原生 Audio API
+- 音频文件通过 Vite 导入
+
+**功能：**
+```typescript
+// src/lib/pixel-office/notificationSound.ts
+
+// 背景音乐
+export function playBackgroundMusic() {
+  const audio = new Audio(bgMusicUrl);
+  audio.loop = true;
+  audio.volume = 0.3;
+  audio.play();
+}
+
+// 音效
+export function playDoneSound() {
+  const audio = new Audio(doneSound);
+  audio.volume = 0.5;
+  audio.play();
+}
+```
+
+**用户控制：**
+- 提供音效开关按钮
+- 音量控制滑块
+- 设置保存到 localStorage
+
+### 8. 贡献热力图说明
+
+**数据来源：**
+- 通过 `office:get-contributions` 获取每个代理的消息数量
+- 格式：`{ "agent-1": 150, "agent-2": 80, ... }`
+
+**视觉呈现：**
+- 代理角色周围显示光晕效果
+- 光晕颜色和大小根据贡献值变化
+- 高贡献：大光晕，亮色
+- 低贡献：小光晕，暗色
+
+**实现：**
+```typescript
+function renderContributionHalo(
+  ctx: CanvasRenderingContext2D,
+  character: Character,
+  contribution: number
+) {
+  const maxContribution = Math.max(...Object.values(contributions));
+  const intensity = contribution / maxContribution;
+  const radius = 20 + intensity * 30;
+
+  const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
+  gradient.addColorStop(0, `rgba(255, 200, 0, ${intensity * 0.5})`);
+  gradient.addColorStop(1, 'rgba(255, 200, 0, 0)');
+
+  ctx.fillStyle = gradient;
+  ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
+}
+```
 
 复用 ShortClaw 现有的 i18n 系统，添加翻译 key：
 
@@ -285,7 +498,47 @@ window.electron.ipcRenderer.invoke('office:get-layout')
 }
 ```
 
-## 实现步骤
+## 现有架构参考
+
+### ShortClaw 架构模式
+
+Office 页面应遵循 ShortClaw 现有的架构模式：
+
+**1. IPC 通信模式**
+- 参考：`src/pages/Chat/index.tsx` 如何调用 IPC
+- 模式：`window.electron.ipcRenderer.invoke(channel, args)`
+- 错误处理：使用 try-catch 包裹，显示用户友好的错误提示
+
+**2. 路由和导航**
+- 参考：`src/pages/Settings/index.tsx` 的路由结构
+- 使用 React Router 的 `<Route>` 组件
+- 在 Sidebar 中使用 `<NavLink>` 组件
+
+**3. 状态管理**
+- 本地状态：使用 React `useState` 和 `useEffect`
+- 不需要 Zustand store（Office 页面状态不需要全局共享）
+
+**4. 样式**
+- 使用 Tailwind CSS
+- 遵循现有的设计系统（颜色、间距等）
+- Canvas 使用内联样式
+
+### 类型定义位置
+
+**Office 相关类型：**
+- 核心类型：`src/lib/pixel-office/types.ts`（从原项目迁移）
+- IPC 接口类型：在使用处内联定义或在 `src/types/office.ts`
+
+**示例：**
+```typescript
+// src/types/office.ts
+export interface OfficeIpcApi {
+  getLayout: () => Promise<{ layout: OfficeLayout | null }>;
+  saveLayout: (layout: OfficeLayout) => Promise<{ success: boolean }>;
+  getAgents: () => Promise<{ agents: AgentData[] }>;
+  getContributions: () => Promise<{ contributions: Record<string, number> }>;
+}
+```
 
 ### 阶段 1：基础迁移
 1. 复制 `lib/pixel-office/` 所有文件到 ShortClaw
@@ -399,7 +652,87 @@ window.electron.ipcRenderer.invoke('office:get-layout')
    - 监控长时间运行的内存泄漏
    - 确保资源正确释放
 
-## 风险和缓解
+## 关键流程序列图
+
+### 1. 页面初始加载流程
+
+```
+User → Sidebar: 点击 Office 入口
+Sidebar → Router: 导航到 /office
+Router → Office Page: 渲染组件
+Office Page → IPC: invoke('office:get-layout')
+IPC → Main Process: 处理请求
+Main Process → File System: 读取 layout.json
+File System → Main Process: 返回布局数据（或 null）
+Main Process → IPC: 返回 { layout }
+IPC → Office Page: 接收布局
+Office Page → Office Page: 初始化 Canvas
+Office Page → IPC: invoke('office:get-agents')
+IPC → Main Process: 处理请求
+Main Process → Gateway: RPC call (agent.list)
+Gateway → Main Process: 返回代理列表
+Main Process → IPC: 返回 { agents }
+IPC → Office Page: 接收代理数据
+Office Page → Canvas: 渲染办公室和角色
+```
+
+### 2. 布局保存流程
+
+```
+User → Editor: 编辑布局（放置家具等）
+Editor → Office Page: 触发保存（防抖 2 秒）
+Office Page → IPC: invoke('office:save-layout', { layout })
+IPC → Main Process: 处理请求
+Main Process → File System: 写入 layout.json
+File System → Main Process: 确认写入成功
+Main Process → IPC: 返回 { success: true }
+IPC → Office Page: 显示保存成功提示
+```
+
+### 3. 实时代理状态更新流程
+
+```
+Office Page → Timer: 每 5 秒触发
+Timer → Office Page: 执行轮询
+Office Page → IPC: invoke('office:get-agents')
+IPC → Main Process: 处理请求
+Main Process → Gateway: RPC call (agent.list)
+Gateway → Main Process: 返回最新代理状态
+Main Process → IPC: 返回 { agents }
+IPC → Office Page: 更新代理数据
+Office Page → agentBridge: 转换为 Character 对象
+agentBridge → Office Page: 返回 Character[]
+Office Page → Canvas: 更新角色状态和动画
+```
+
+## 回滚策略
+
+如果迁移过程中遇到问题需要回滚：
+
+**1. 代码回滚**
+```bash
+# 回滚到迁移前的提交
+git revert <commit-hash>
+# 或者重置到迁移前
+git reset --hard <commit-hash>
+```
+
+**2. 文件清理**
+- 删除 `src/lib/pixel-office/` 目录
+- 删除 `src/pages/Office/` 目录
+- 删除 `public/assets/pixel-office/` 目录
+- 删除 `electron/api/office.ts` 文件
+- 从 `electron/preload/index.ts` 移除 office 相关的 IPC channels
+- 从 `src/App.tsx` 移除 Office 路由
+- 从 `Sidebar.tsx` 移除 Office 导航项
+
+**3. 用户数据保留**
+- 保留 `{userData}/pixel-office/layout.json`（用户的布局数据）
+- 如果后续重新实现，可以复用
+
+**4. 分阶段回滚**
+- 如果只是某个功能有问题，可以只回滚该功能
+- 例如：保留查看模式，回滚编辑功能
 
 ### 风险 1：迁移工作量大
 - **影响**：开发时间可能超出预期
