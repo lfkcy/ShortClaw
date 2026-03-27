@@ -26,17 +26,11 @@ interface ShortApiLocalServer {
 
 function getBaseUrl(): string {
   // Uses environment variable or default
-  return process.env.NODE_ENV === 'development'
-    ? 'http://localhost:3000'
-    : 'https://shortapi.ai';
+  return 'https://shortapi.ai';
 }
 
 function toBase64Url(buffer: Buffer): string {
-  return buffer
-    .toString('base64')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
+  return buffer.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
 function createPkce(): { verifier: string; challenge: string } {
@@ -81,7 +75,7 @@ async function createAuthorizationFlow(): Promise<ShortApiOAuthAuthorizationFlow
   const state = createState();
   const baseUrl = getBaseUrl();
   const url = new URL('/oauth/authorize', baseUrl);
-  
+
   url.searchParams.set('response_type', 'code');
   url.searchParams.set('client_id', CLIENT_ID);
   url.searchParams.set('redirect_uri', REDIRECT_URI);
@@ -165,7 +159,7 @@ function startLocalOAuthServer(state: string): Promise<ShortApiLocalServer | nul
 
 async function exchangeAuthorizationCode(
   code: string,
-  verifier: string,
+  verifier: string
 ): Promise<{ access: string; refresh: string; expires: number; accountId: string }> {
   const baseUrl = getBaseUrl();
   const tokenUrl = new URL('/api/oauth/token', baseUrl).toString();
@@ -187,7 +181,7 @@ async function exchangeAuthorizationCode(
     throw new Error(`ShortAPI token exchange failed (${response.status}): ${text}`);
   }
 
-  const json = await response.json() as {
+  const json = (await response.json()) as {
     access_token?: string;
     refresh_token?: string;
     expires_in?: number;
@@ -201,12 +195,16 @@ async function exchangeAuthorizationCode(
   return {
     access: json.access_token,
     refresh: json.refresh_token || '',
-    expires: json.expires_in ? Date.now() + json.expires_in * 1000 : Date.now() + 30 * 24 * 60 * 60 * 1000,
+    expires: json.expires_in
+      ? Date.now() + json.expires_in * 1000
+      : Date.now() + 30 * 24 * 60 * 60 * 1000,
     accountId: json.account_id || 'default-account',
   };
 }
 
-export async function refreshShortApiToken(refreshToken: string): Promise<{ access: string; refresh: string; expires: number }> {
+export async function refreshShortApiToken(
+  refreshToken: string
+): Promise<{ access: string; refresh: string; expires: number }> {
   const baseUrl = getBaseUrl();
   const tokenUrl = new URL('/api/oauth/token', baseUrl).toString();
 
@@ -225,7 +223,7 @@ export async function refreshShortApiToken(refreshToken: string): Promise<{ acce
     throw new Error(`ShortAPI token refresh failed (${response.status}): ${text}`);
   }
 
-  const json = await response.json() as {
+  const json = (await response.json()) as {
     access_token?: string;
     refresh_token?: string;
     expires_in?: number;
@@ -238,14 +236,19 @@ export async function refreshShortApiToken(refreshToken: string): Promise<{ acce
   return {
     access: json.access_token,
     refresh: json.refresh_token || refreshToken,
-    expires: json.expires_in ? Date.now() + json.expires_in * 1000 : Date.now() + 30 * 24 * 60 * 60 * 1000,
+    expires: json.expires_in
+      ? Date.now() + json.expires_in * 1000
+      : Date.now() + 30 * 24 * 60 * 60 * 1000,
   };
 }
 
 export async function loginShortApiOAuth(options: {
   openUrl: (url: string) => Promise<void>;
   onProgress?: (message: string) => void;
-  onManualCodeRequired?: (payload: { authorizationUrl: string; reason: 'port_in_use' | 'callback_timeout' }) => void;
+  onManualCodeRequired?: (payload: {
+    authorizationUrl: string;
+    reason: 'port_in_use' | 'callback_timeout';
+  }) => void;
   onManualCodeInput?: () => Promise<string>;
 }): Promise<ShortApiOAuthCredentials> {
   const { verifier, state, url } = await createAuthorizationFlow();
@@ -256,7 +259,9 @@ export async function loginShortApiOAuth(options: {
   try {
     await options.openUrl(url);
     options.onProgress?.(
-      server ? 'Waiting for ShortAPI OAuth callback…' : 'Callback port unavailable, waiting for manual authorization code…',
+      server
+        ? 'Waiting for ShortAPI OAuth callback…'
+        : 'Callback port unavailable, waiting for manual authorization code…'
     );
 
     let code: string | undefined;
