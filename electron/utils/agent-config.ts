@@ -88,6 +88,8 @@ export interface AgentSummary {
   agentDir: string;
   mainSessionKey: string;
   channelTypes: string[];
+  providerId?: string;
+  emoji?: string;
 }
 
 export interface AgentsSnapshot {
@@ -521,6 +523,8 @@ async function buildSnapshotFromConfig(config: AgentConfigDocument): Promise<Age
       channelTypes: configuredChannels
         .filter((ct) => ownedChannels.has(ct))
         .map((channelType) => toUiChannelType(channelType)),
+      providerId: explicitModelRef?.split('/')[0] || defaultModelRef?.split('/')[0] || undefined,
+      emoji: entry.emoji as string | undefined,
     };
   });
 

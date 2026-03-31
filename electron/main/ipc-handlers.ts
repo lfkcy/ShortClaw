@@ -80,6 +80,7 @@ import {
   handleOfficeSaveLayout,
   handleOfficeGetAgents,
   handleOfficeGetContributions,
+  handleOfficeGetGitHubContributions,
 } from '../api/office';
 import {
   isLaunchAtStartupKey,
@@ -2722,5 +2723,9 @@ function registerOfficeHandlers(gatewayManager: GatewayManager): void {
 
   ipcMain.handle('office:get-contributions', async () => {
     return await handleOfficeGetContributions({ gatewayManager } as any);
+  });
+
+  ipcMain.handle('office:get-github-contributions', async () => {
+    return await handleOfficeGetGitHubContributions();
   });
 }

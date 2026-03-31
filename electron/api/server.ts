@@ -16,6 +16,9 @@ import { handleFileRoutes } from './routes/files';
 import { handleSessionRoutes } from './routes/sessions';
 import { handleCronRoutes } from './routes/cron';
 import { handleUserRoutes } from './routes/user';
+import { handleAgentActivityRoutes } from './routes/agent-activity';
+import { handleConfigRoutes } from './routes/config';
+import { handlePixelOfficeRoutes } from './routes/pixel-office';
 import { sendJson, setCorsHeaders, requireJsonContentType } from './route-utils';
 
 type RouteHandler = (
@@ -39,6 +42,9 @@ const routeHandlers: RouteHandler[] = [
   handleCronRoutes,
   handleLogRoutes,
   handleUsageRoutes,
+  handleAgentActivityRoutes,
+  handleConfigRoutes,
+  handlePixelOfficeRoutes,
 ];
 
 /**

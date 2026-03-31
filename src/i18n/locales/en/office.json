@@ -1,0 +1,99 @@
+{
+  "pixelOffice": {
+    "title": "Pixel Office",
+    "sound": "Sound",
+    "editMode": "Edit Mode",
+    "exitEdit": "Exit Edit",
+    "undo": "Undo",
+    "redo": "Redo",
+    "save": "Save",
+    "reset": "Reset",
+    "resetView": "Reset View",
+    "noData": "No Data",
+    "broadcast": {
+      "online": "is online",
+      "offline": "is offline"
+    },
+    "state": {
+      "working": "Working",
+      "idle": "Idle",
+      "offline": "Offline",
+      "waiting": "Waiting"
+    },
+    "gatewaySre": {
+      "name": "Gateway SRE",
+      "statusLabel": "Status",
+      "responseMs": "Response Time",
+      "status": {
+        "healthy": "Healthy",
+        "degraded": "Degraded",
+        "down": "Down",
+        "unknown": "Unknown"
+      }
+    },
+    "serverStatus": {
+      "healthy": "Healthy",
+      "degraded": "Degraded",
+      "down": "Down",
+      "unknown": "Unknown"
+    },
+    "tempWorker": {
+      "createdBy": "created by"
+    },
+    "heatmap": {
+      "title": "Activity Heatmap",
+      "messages": "messages"
+    }
+  },
+  "idleRank": {
+    "title": "Idle Rank",
+    "online": "Online",
+    "active": "Active",
+    "idle": "Idle"
+  },
+  "agent": {
+    "openChat": "Open Chat",
+    "model": "Model",
+    "platform": "Platform",
+    "sessionCount": "Sessions",
+    "messageCount": "Messages",
+    "tokenUsage": "Token Usage",
+    "lastActive": "Last Active",
+    "todayAvgResponse": "Avg Response",
+    "stats": "Stats",
+    "totalTokenTip": "Total tokens used",
+    "todayAvgResponseTip": "Today's average response time",
+    "switchModel": "Switch Model",
+    "currentUnknownModel": "Current (unknown)",
+    "saveModel": "Save",
+    "modelSaving": "Saving...",
+    "cancelModel": "Cancel",
+    "modelApplyHint": "Model changes apply immediately to new conversations",
+    "modelApplyFailed": "Failed to apply model",
+    "status": {
+      "working": "Working",
+      "online": "Online",
+      "idle": "Idle",
+      "offline": "Offline"
+    }
+  },
+  "platform": {
+    "feishu": "Feishu",
+    "yuanbao": "Yuanbao",
+    "discord": "Discord",
+    "telegram": "Telegram",
+    "whatsapp": "WhatsApp",
+    "qqbot": "QQ Bot",
+    "wecom": "WeCom"
+  },
+  "common": {
+    "justNow": "just now",
+    "minutesAgo": "min ago",
+    "hoursAgo": "hr ago",
+    "daysAgo": "days ago",
+    "noData": "No Data"
+  },
+  "models": {
+    "title": "Models"
+  }
+}

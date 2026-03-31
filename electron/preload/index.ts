@@ -62,6 +62,7 @@ const electronAPI = {
         'office:save-layout',
         'office:get-agents',
         'office:get-contributions',
+        'office:get-github-contributions',
         // Update
         'update:status',
         'update:version',

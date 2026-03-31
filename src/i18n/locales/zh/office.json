@@ -1,0 +1,96 @@
+{
+  "pixelOffice": {
+    "title": "像素办公室",
+    "sound": "音效",
+    "editMode": "编辑模式",
+    "exitEdit": "退出编辑",
+    "undo": "撤销",
+    "redo": "重做",
+    "save": "保存",
+    "reset": "重置",
+    "resetView": "重置视图",
+    "noData": "暂无数据",
+    "broadcast": {
+      "online": "上线了",
+      "offline": "下线了"
+    },
+    "state": {
+      "working": "工作中",
+      "idle": "空闲",
+      "offline": "离线",
+      "waiting": "等待中"
+    },
+    "gatewaySre": {
+      "name": "网关 SRE",
+      "statusLabel": "状态",
+      "responseMs": "响应时间",
+      "status": {
+        "healthy": "健康",
+        "degraded": "降级",
+        "down": "宕机",
+        "unknown": "未知"
+      }
+    },
+    "serverStatus": {
+      "healthy": "健康",
+      "degraded": "降级",
+      "down": "宕机",
+      "unknown": "未知"
+    },
+    "heatmap": {
+      "title": "活动热力图",
+      "messages": "条消息"
+    }
+  },
+  "idleRank": {
+    "title": "摸鱼排行",
+    "online": "在线",
+    "active": "活跃",
+    "idle": "摸鱼"
+  },
+  "agent": {
+    "openChat": "打开聊天",
+    "model": "模型",
+    "platform": "平台",
+    "sessionCount": "会话数",
+    "messageCount": "消息数",
+    "tokenUsage": "Token 用量",
+    "lastActive": "最后活跃",
+    "todayAvgResponse": "平均响应",
+    "stats": "统计",
+    "totalTokenTip": "总 Token 使用量",
+    "todayAvgResponseTip": "今日平均响应时间",
+    "switchModel": "切换模型",
+    "currentUnknownModel": "当前（未知）",
+    "saveModel": "保存",
+    "modelSaving": "保存中...",
+    "cancelModel": "取消",
+    "modelApplyHint": "模型更改将立即应用于新对话",
+    "modelApplyFailed": "应用模型失败",
+    "status": {
+      "working": "工作中",
+      "online": "在线",
+      "idle": "空闲",
+      "offline": "离线"
+    }
+  },
+  "platform": {
+    "feishu": "飞书",
+    "yuanbao": "元宝",
+    "discord": "Discord",
+    "telegram": "Telegram",
+    "whatsapp": "WhatsApp",
+    "qqbot": "QQ 机器人",
+    "wecom": "企业微信"
+  },
+  "common": {
+    "justNow": "刚刚",
+    "minutesAgo": "分钟前",
+    "hoursAgo": "小时前",
+    "daysAgo": "天前",
+    "noData": "暂无数据"
+  },
+  "models": {
+    "title": "模型列表"
+  }
+}

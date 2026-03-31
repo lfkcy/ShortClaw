@@ -1,0 +1,99 @@
+{
+  "pixelOffice": {
+    "title": "ピクセルオフィス",
+    "sound": "サウンド",
+    "editMode": "編集モード",
+    "exitEdit": "編集を終了",
+    "undo": "元に戻す",
+    "redo": "やり直す",
+    "save": "保存",
+    "reset": "リセット",
+    "resetView": "ビューをリセット",
+    "noData": "データがありません",
+    "broadcast": {
+      "online": "がオンラインになりました",
+      "offline": "がオフラインになりました"
+    },
+    "state": {
+      "working": "作業中",
+      "idle": "アイドル",
+      "offline": "オフライン",
+      "waiting": "待機中"
+    },
+    "gatewaySre": {
+      "name": "ゲートウェイ SRE",
+      "statusLabel": "ステータス",
+      "responseMs": "応答時間",
+      "status": {
+        "healthy": "正常",
+        "degraded": "低下",
+        "down": "ダウン",
+        "unknown": "不明"
+      }
+    },
+    "serverStatus": {
+      "healthy": "正常",
+      "degraded": "低下",
+      "down": "ダウン",
+      "unknown": "不明"
+    },
+    "tempWorker": {
+      "createdBy": "作成者"
+    },
+    "heatmap": {
+      "title": "アクティビティヒートマップ",
+      "messages": "メッセージ"
+    }
+  },
+  "idleRank": {
+    "title": "サボりランキング",
+    "online": "オンライン",
+    "active": "アクティブ",
+    "idle": "サボり"
+  },
+  "agent": {
+    "openChat": "チャットを開く",
+    "model": "モデル",
+    "platform": "プラットフォーム",
+    "sessionCount": "セッション数",
+    "messageCount": "メッセージ数",
+    "tokenUsage": "トークン使用量",
+    "lastActive": "最終アクティブ",
+    "todayAvgResponse": "平均応答",
+    "stats": "統計",
+    "totalTokenTip": "総トークン使用量",
+    "todayAvgResponseTip": "本日の平均応答時間",
+    "switchModel": "モデルを切り替え",
+    "currentUnknownModel": "現在（不明）",
+    "saveModel": "保存",
+    "modelSaving": "保存中...",
+    "cancelModel": "キャンセル",
+    "modelApplyHint": "モデルの変更は新しい会話に即座に適用されます",
+    "modelApplyFailed": "モデルの適用に失敗しました",
+    "status": {
+      "working": "作業中",
+      "online": "オンライン",
+      "idle": "アイドル",
+      "offline": "オフライン"
+    }
+  },
+  "platform": {
+    "feishu": "Feishu",
+    "yuanbao": "Yuanbao",
+    "discord": "Discord",
+    "telegram": "Telegram",
+    "whatsapp": "WhatsApp",
+    "qqbot": "QQ Bot",
+    "wecom": "WeCom"
+  },
+  "common": {
+    "justNow": "たった今",
+    "minutesAgo": "分前",
+    "hoursAgo": "時間前",
+    "daysAgo": "日前",
+    "noData": "データがありません"
+  },
+  "models": {
+    "title": "モデル一覧"
+  }
+}
