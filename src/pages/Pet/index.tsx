@@ -26,14 +26,15 @@ type DragSession = Readonly<{
 }>;
 
 function getFrameIndex(status: PetStateSnapshot['status'], tick: number): number {
-  switch (status) {
-    case 'working':
-      return WORKING_FRAMES[tick % WORKING_FRAMES.length];
-    case 'error':
-      return ERROR_FRAMES[tick % ERROR_FRAMES.length];
-    default:
-      return IDLE_FRAMES[tick % IDLE_FRAMES.length];
-  }
+  // switch (status) {
+  //   case 'working':
+  //     return WORKING_FRAMES[tick % WORKING_FRAMES.length];
+  //   case 'error':
+  //     return ERROR_FRAMES[tick % ERROR_FRAMES.length];
+  //   default:
+  //     return IDLE_FRAMES[tick % IDLE_FRAMES.length];
+  // }
+  return IDLE_FRAMES[tick % IDLE_FRAMES.length];
 }
 
 export function Pet() {
@@ -59,7 +60,10 @@ export function Pet() {
   useEffect(() => {
     void invokeIpc<PetStateSnapshot>('pet:get-state')
       .then((snapshot) => {
-        setPetState(snapshot);
+        setPetState({
+          ...snapshot,
+          status: 'idle',
+        });
       })
       .catch(() => {});
 
@@ -68,7 +72,10 @@ export function Pet() {
       (...args: unknown[]) => {
         const nextState = args[0] as PetStateSnapshot | undefined;
         if (nextState) {
-          setPetState(nextState);
+          setPetState({
+            ...nextState,
+            status: 'idle',
+          });
         }
       }
     );
