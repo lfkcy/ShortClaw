@@ -37,7 +37,6 @@ vi.mock('@electron/utils/agent-config', () => ({
 vi.mock('@electron/utils/plugin-install', () => ({
   ensureDingTalkPluginInstalled: vi.fn(),
   ensureFeishuPluginInstalled: vi.fn(),
-  ensureQQBotPluginInstalled: vi.fn(),
   ensureWeChatPluginInstalled: vi.fn(),
   ensureWeComPluginInstalled: vi.fn(),
 }));
@@ -160,7 +159,7 @@ describe('handleChannelRoutes', () => {
     const handled = await handleChannelRoutes(
       { method: 'GET' } as IncomingMessage,
       {} as ServerResponse,
-      new URL('http://127.0.0.1:3210/api/channels/accounts'),
+      new URL('http://127.0.0.1:13210/api/channels/accounts'),
       {
         gatewayManager: {
           rpc,
@@ -242,7 +241,7 @@ describe('handleChannelRoutes', () => {
     await handleChannelRoutes(
       { method: 'GET' } as IncomingMessage,
       {} as ServerResponse,
-      new URL('http://127.0.0.1:3210/api/channels/accounts'),
+      new URL('http://127.0.0.1:13210/api/channels/accounts'),
       {
         gatewayManager: {
           rpc,
@@ -297,7 +296,7 @@ describe('handleChannelRoutes', () => {
     const handled = await handleChannelRoutes(
       { method: 'GET' } as IncomingMessage,
       {} as ServerResponse,
-      new URL('http://127.0.0.1:3210/api/channels/targets?channelType=qqbot&accountId=default'),
+      new URL('http://127.0.0.1:13210/api/channels/targets?channelType=qqbot&accountId=default'),
       {
         gatewayManager: {
           rpc: vi.fn(),
@@ -411,7 +410,7 @@ describe('handleChannelRoutes', () => {
     const handled = await handleChannelRoutes(
       { method: 'GET' } as IncomingMessage,
       {} as ServerResponse,
-      new URL('http://127.0.0.1:3210/api/channels/targets?channelType=feishu&accountId=default'),
+      new URL('http://127.0.0.1:13210/api/channels/targets?channelType=feishu&accountId=default'),
       {
         gatewayManager: {
           rpc: vi.fn(),
@@ -470,7 +469,7 @@ describe('handleChannelRoutes', () => {
     const handled = await handleChannelRoutes(
       { method: 'GET' } as IncomingMessage,
       {} as ServerResponse,
-      new URL('http://127.0.0.1:3210/api/channels/targets?channelType=wecom&accountId=default'),
+      new URL('http://127.0.0.1:13210/api/channels/targets?channelType=wecom&accountId=default'),
       {
         gatewayManager: {
           rpc: vi.fn(),
@@ -520,7 +519,7 @@ describe('handleChannelRoutes', () => {
     const handled = await handleChannelRoutes(
       { method: 'GET' } as IncomingMessage,
       {} as ServerResponse,
-      new URL('http://127.0.0.1:3210/api/channels/targets?channelType=dingtalk&accountId=default'),
+      new URL('http://127.0.0.1:13210/api/channels/targets?channelType=dingtalk&accountId=default'),
       {
         gatewayManager: {
           rpc: vi.fn(),
@@ -572,7 +571,7 @@ describe('handleChannelRoutes', () => {
     const handled = await handleChannelRoutes(
       { method: 'GET' } as IncomingMessage,
       {} as ServerResponse,
-      new URL('http://127.0.0.1:3210/api/channels/targets?channelType=wechat&accountId=wechat-bot'),
+      new URL('http://127.0.0.1:13210/api/channels/targets?channelType=wechat&accountId=wechat-bot'),
       {
         gatewayManager: {
           rpc: vi.fn(),

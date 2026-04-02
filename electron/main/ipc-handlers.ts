@@ -49,7 +49,6 @@ import { checkUvInstalled, installUv, setupManagedPython } from '../utils/uv-set
 import {
   ensureDingTalkPluginInstalled,
   ensureFeishuPluginInstalled,
-  ensureQQBotPluginInstalled,
   ensureWeComPluginInstalled,
 } from '../utils/plugin-install';
 import { updateSkillConfig, getSkillConfig, getAllSkillConfigs } from '../utils/skill-config';
@@ -100,7 +99,7 @@ export function registerIpcHandlers(
   clawHubService: ClawHubService,
   mainWindow: BrowserWindow,
   petWindowController: PetWindowController,
-  petStateService: PetStateService,
+  petStateService: PetStateService
 ): void {
   // Unified request protocol (non-breaking: legacy channels remain available)
   registerUnifiedRequestHandlers(gatewayManager);
@@ -1590,22 +1589,7 @@ function registerOpenClawHandlers(gatewayManager: GatewayManager): void {
             warning: installResult.warning,
           };
         }
-        if (channelType === 'qqbot') {
-          const installResult = await ensureQQBotPluginInstalled();
-          if (!installResult.installed) {
-            return {
-              success: false,
-              error: installResult.warning || 'QQ Bot plugin install failed',
-            };
-          }
-          await saveChannelConfig(channelType, config);
-          scheduleGatewayChannelSaveRefresh(channelType, `channel:saveConfig (${channelType})`);
-          return {
-            success: true,
-            pluginInstalled: installResult.installed,
-            warning: installResult.warning,
-          };
-        }
+        // QQBot is a built-in channel since OpenClaw 3.31 — no plugin install needed
         if (channelType === 'feishu') {
           const installResult = await ensureFeishuPluginInstalled();
           if (!installResult.installed) {
@@ -2240,10 +2224,7 @@ function registerAppHandlers(): void {
   });
 }
 
-function registerSettingsHandlers(
-  gatewayManager: GatewayManager,
-  mainWindow: BrowserWindow,
-): void {
+function registerSettingsHandlers(gatewayManager: GatewayManager, mainWindow: BrowserWindow): void {
   const pushSettingsPatch = (patch: Partial<AppSettings>) => {
     if (mainWindow.isDestroyed()) {
       return;
@@ -2333,7 +2314,7 @@ function registerSettingsHandlers(
 
 function registerPetHandlers(
   petWindowController: PetWindowController,
-  petStateService: PetStateService,
+  petStateService: PetStateService
 ): void {
   ipcMain.handle('pet:get-state', () => {
     return petStateService.getSnapshot();

@@ -59,13 +59,15 @@ interface NavItemProps {
   badge?: string;
   collapsed?: boolean;
   onClick?: () => void;
+  testId?: string;
 }
 
-function NavItem({ to, icon, label, badge, collapsed, onClick }: NavItemProps) {
+function NavItem({ to, icon, label, badge, collapsed, onClick, testId }: NavItemProps) {
   return (
     <NavLink
       to={to}
       onClick={onClick}
+      data-testid={testId}
       className={({ isActive }) =>
         cn(
           'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[14px] font-medium transition-colors',
@@ -280,6 +282,7 @@ export function Sidebar() {
 
   return (
     <aside
+      data-testid="sidebar"
       className={cn(
         'flex shrink-0 flex-col border-r bg-[#eae8e1]/60 dark:bg-background transition-all duration-300',
         sidebarCollapsed ? 'w-16' : 'w-64'
@@ -317,6 +320,7 @@ export function Sidebar() {
       {/* Navigation */}
       <nav className="flex flex-col px-2 gap-0.5">
         <button
+          data-testid="sidebar-new-chat"
           onClick={() => {
             const { messages } = useChatStore.getState();
             if (messages.length > 0) newSession();

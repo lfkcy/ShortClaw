@@ -16,7 +16,7 @@ export const PROVIDER_TYPES = [
   'siliconflow',
   'minimax-portal',
   'minimax-portal-cn',
-  'qwen-portal',
+  'modelstudio',
   'ollama',
   'custom',
   'shortapi',
@@ -33,7 +33,7 @@ export const BUILTIN_PROVIDER_TYPES = [
   'siliconflow',
   'minimax-portal',
   'minimax-portal-cn',
-  'qwen-portal',
+  'modelstudio',
   'ollama',
   'shortapi',
 ] as const;
@@ -81,6 +81,8 @@ export interface ProviderTypeInfo {
   codePlanPresetBaseUrl?: string;
   codePlanPresetModelId?: string;
   codePlanDocsUrl?: string;
+  /** If true, this provider is not shown in the "Add Provider" dialog. */
+  hidden?: boolean;
 }
 
 export type ProviderAuthMode = 'api_key' | 'oauth_device' | 'oauth_browser' | 'local';
@@ -154,6 +156,10 @@ export const PROVIDER_TYPE_INFO: ProviderTypeInfo[] = [
     requiresApiKey: true,
     isOAuth: true,
     supportsApiKey: true,
+    defaultModelId: 'gpt-5.4',
+    showModelId: true,
+    showModelIdInDevModeOnly: true,
+    modelIdPlaceholder: 'gpt-5.4',
     apiKeyUrl: 'https://platform.openai.com/api-keys',
   },
   {
@@ -165,7 +171,10 @@ export const PROVIDER_TYPE_INFO: ProviderTypeInfo[] = [
     requiresApiKey: true,
     isOAuth: true,
     supportsApiKey: true,
-    defaultModelId: 'gemini-3.1-pro-preview',
+    defaultModelId: 'gemini-3-pro-preview',
+    showModelId: true,
+    showModelIdInDevModeOnly: true,
+    modelIdPlaceholder: 'gemini-3-pro-preview',
     apiKeyUrl: 'https://aistudio.google.com/app/apikey',
   },
   {
@@ -190,6 +199,9 @@ export const PROVIDER_TYPE_INFO: ProviderTypeInfo[] = [
     isOAuth: true,
     supportsApiKey: true,
     defaultModelId: 'MiniMax-M2.7',
+    showModelId: true,
+    showModelIdInDevModeOnly: true,
+    modelIdPlaceholder: 'MiniMax-M2.7',
     apiKeyUrl: 'https://platform.minimaxi.com/',
   },
   {
@@ -212,6 +224,7 @@ export const PROVIDER_TYPE_INFO: ProviderTypeInfo[] = [
     requiresApiKey: true,
     defaultBaseUrl: 'https://api.siliconflow.cn/v1',
     showModelId: true,
+    showModelIdInDevModeOnly: true,
     modelIdPlaceholder: 'deepseek-ai/DeepSeek-V3',
     defaultModelId: 'deepseek-ai/DeepSeek-V3',
     docsUrl: 'https://docs.siliconflow.cn/cn/userguide/introduction',
@@ -226,17 +239,26 @@ export const PROVIDER_TYPE_INFO: ProviderTypeInfo[] = [
     isOAuth: true,
     supportsApiKey: true,
     defaultModelId: 'MiniMax-M2.7',
+    showModelId: true,
+    showModelIdInDevModeOnly: true,
+    modelIdPlaceholder: 'MiniMax-M2.7',
     apiKeyUrl: 'https://platform.minimax.io',
   },
   {
-    id: 'qwen-portal',
-    name: 'Qwen (Global)',
+    id: 'modelstudio',
+    name: 'Model Studio',
     icon: '☁️',
     placeholder: 'sk-...',
     model: 'Qwen',
-    requiresApiKey: false,
-    isOAuth: true,
-    defaultModelId: 'coder-model',
+    requiresApiKey: true,
+    defaultBaseUrl: 'https://coding.dashscope.aliyuncs.com/v1',
+    showBaseUrl: true,
+    defaultModelId: 'qwen3.5-plus',
+    showModelId: true,
+    showModelIdInDevModeOnly: true,
+    modelIdPlaceholder: 'qwen3.5-plus',
+    apiKeyUrl: 'https://bailian.console.aliyun.com/',
+    hidden: true,
   },
   {
     id: 'ark',

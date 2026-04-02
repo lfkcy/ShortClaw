@@ -22,6 +22,7 @@ import {
 const OPENCLAW_DIR = join(homedir(), '.openclaw');
 const CONFIG_FILE = join(OPENCLAW_DIR, 'openclaw.json');
 const WECOM_PLUGIN_ID = 'wecom';
+// Note: QQBot is a built-in channel since OpenClaw 3.31 — no plugin ID needed.
 const WECHAT_PLUGIN_ID = OPENCLAW_WECHAT_CHANNEL_TYPE;
 const FEISHU_PLUGIN_ID_CANDIDATES = ['openclaw-lark', 'feishu-openclaw-plugin'] as const;
 const DEFAULT_ACCOUNT_ID = 'default';
@@ -47,6 +48,7 @@ const BUILTIN_CHANNEL_IDS = new Set([
     'msteams',
     'googlechat',
     'mattermost',
+    'qqbot',
 ]);
 
 // Unique credential key per channel type – used for duplicate bot detection.
@@ -463,18 +465,7 @@ async function ensurePluginAllowlist(currentConfig: OpenClawConfig, channelType:
         }
     }
 
-    if (channelType === 'qqbot') {
-        if (!currentConfig.plugins) {
-            currentConfig.plugins = {};
-        }
-        currentConfig.plugins.enabled = true;
-        const allow = Array.isArray(currentConfig.plugins.allow)
-            ? currentConfig.plugins.allow as string[]
-            : [];
-        if (!allow.includes('qqbot')) {
-            currentConfig.plugins.allow = [...allow, 'qqbot'];
-        }
-    }
+    // Note: QQBot is a built-in channel since OpenClaw 3.31 — no plugin registration needed.
 
     if (channelType === WECHAT_PLUGIN_ID) {
         if (!currentConfig.plugins) {

@@ -24,7 +24,6 @@ import { useGatewayStore } from './stores/gateway';
 import { useProviderStore } from './stores/providers';
 import { applyGatewayTransportPreference } from './lib/api-client';
 
-
 /**
  * Error Boundary to catch and display React rendering errors
  */
@@ -48,28 +47,35 @@ class ErrorBoundary extends Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{
-          padding: '40px',
-          color: '#f87171',
-          background: '#0f172a',
-          minHeight: '100vh',
-          fontFamily: 'monospace'
-        }}>
+        <div
+          style={{
+            padding: '40px',
+            color: '#f87171',
+            background: '#0f172a',
+            minHeight: '100vh',
+            fontFamily: 'monospace',
+          }}
+        >
           <h1 style={{ fontSize: '24px', marginBottom: '16px' }}>Something went wrong</h1>
-          <pre style={{
-            whiteSpace: 'pre-wrap',
-            wordBreak: 'break-all',
-            background: '#1e293b',
-            padding: '16px',
-            borderRadius: '8px',
-            fontSize: '14px'
-          }}>
+          <pre
+            style={{
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-all',
+              background: '#1e293b',
+              padding: '16px',
+              borderRadius: '8px',
+              fontSize: '14px',
+            }}
+          >
             {this.state.error?.message}
             {'\n\n'}
             {this.state.error?.stack}
           </pre>
           <button
-            onClick={() => { this.setState({ hasError: false, error: null }); window.location.reload(); }}
+            onClick={() => {
+              this.setState({ hasError: false, error: null });
+              window.location.reload();
+            }}
             style={{
               marginTop: '16px',
               padding: '8px 16px',
@@ -77,7 +83,7 @@ class ErrorBoundary extends Component<
               color: 'white',
               border: 'none',
               borderRadius: '6px',
-              cursor: 'pointer'
+              cursor: 'pointer',
             }}
           >
             Reload
@@ -92,6 +98,9 @@ class ErrorBoundary extends Component<
 function App() {
   const navigate = useNavigate();
   const location = useLocation();
+  const skipSetupForE2E =
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('e2eSkipSetup') === '1';
   const initSettings = useSettingsStore((state) => state.init);
   const theme = useSettingsStore((state) => state.theme);
   const language = useSettingsStore((state) => state.language);
@@ -124,12 +133,13 @@ function App() {
   useEffect(() => {
     if (
       !setupComplete &&
+      !skipSetupForE2E &&
       !location.pathname.startsWith('/setup') &&
       !location.pathname.startsWith('/pet')
     ) {
       navigate('/setup');
     }
-  }, [setupComplete, location.pathname, navigate]);
+  }, [setupComplete, skipSetupForE2E, location.pathname, navigate]);
 
   // Listen for navigation events from main process
   useEffect(() => {
@@ -190,12 +200,7 @@ function App() {
         </Routes>
 
         {/* Global toast notifications */}
-        <Toaster
-          position="bottom-right"
-          richColors
-          closeButton
-          style={{ zIndex: 99999 }}
-        />
+        <Toaster position="bottom-right" richColors closeButton style={{ zIndex: 99999 }} />
       </TooltipProvider>
     </ErrorBoundary>
   );

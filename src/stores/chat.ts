@@ -777,6 +777,16 @@ function isToolResultRole(role: unknown): boolean {
   return normalized === 'toolresult' || normalized === 'tool_result';
 }
 
+/** True for internal plumbing messages that should never be shown in the UI. */
+function isInternalMessage(msg: { role?: unknown; content?: unknown }): boolean {
+  if (msg.role === 'system') return true;
+  if (msg.role === 'assistant') {
+    const text = getMessageText(msg.content);
+    if (/^(HEARTBEAT_OK|NO_REPLY)\s*$/.test(text)) return true;
+  }
+  return false;
+}
+
 function extractTextFromContent(content: unknown): string {
   if (typeof content === 'string') return content;
   if (!Array.isArray(content)) return '';
@@ -1306,15 +1316,52 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }, 15_000);
 
     const loadPromise = (async () => {
+      const isCurrentSession = () => get().currentSessionKey === currentSessionKey;
+      const getPreviewMergeKey = (message: RawMessage): string => (
+        `${message.id ?? ''}|${message.role}|${message.timestamp ?? ''}|${getMessageText(message.content)}`
+      );
+      const mergeHydratedMessages = (
+        currentMessages: RawMessage[],
+        hydratedMessages: RawMessage[],
+      ): RawMessage[] => {
+        const hydratedFilesByKey = new Map(
+          hydratedMessages
+            .filter((message) => message._attachedFiles?.length)
+            .map((message) => [
+              getPreviewMergeKey(message),
+              message._attachedFiles!.map((file) => ({ ...file })),
+            ]),
+        );
+
+        return currentMessages.map((message) => {
+          const attachedFiles = hydratedFilesByKey.get(getPreviewMergeKey(message));
+          return attachedFiles
+            ? { ...message, _attachedFiles: attachedFiles }
+            : message;
+        });
+      };
+
+      const applyLoadFailure = (errorMessage: string | null) => {
+        if (!isCurrentSession()) return;
+        set((state) => {
+          const hasMessages = state.messages.length > 0;
+          return {
+            loading: false,
+            error: !quiet && errorMessage ? errorMessage : state.error,
+            ...(hasMessages ? {} : { messages: [] as RawMessage[] }),
+          };
+        });
+      };
+
       const applyLoadedMessages = (rawMessages: RawMessage[], thinkingLevel: string | null) => {
       // Guard: if the user switched sessions while this async load was in
       // flight, discard the result to prevent overwriting the new session's
       // messages with stale data from the old session.
-      if (get().currentSessionKey !== currentSessionKey) return;
+      if (!isCurrentSession()) return;
 
       // Before filtering: attach images/files from tool_result messages to the next assistant message
       const messagesWithToolImages = enrichWithToolResultFiles(rawMessages);
-      const filteredMessages = messagesWithToolImages.filter((msg) => !isToolResultRole(msg.role));
+      const filteredMessages = messagesWithToolImages.filter((msg) => !isToolResultRole(msg.role) && !isInternalMessage(msg));
       // Restore file attachments for user/assistant messages (from cache + text patterns)
       const enrichedMessages = enrichWithCachedImages(filteredMessages);
 
@@ -1369,17 +1416,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
       // Async: load missing image previews from disk (updates in background)
       loadMissingPreviews(finalMessages).then((updated) => {
+        if (!isCurrentSession()) return;
         if (updated) {
-          // Create new object references so React.memo detects changes.
-          // loadMissingPreviews mutates AttachedFileMeta in place, so we
-          // must produce fresh message + file references for each affected msg.
-          set({
-            messages: finalMessages.map(msg =>
-              msg._attachedFiles
-                ? { ...msg, _attachedFiles: msg._attachedFiles.map(f => ({ ...f })) }
-                : msg
-            ),
-          });
+          set((state) => ({
+            messages: mergeHydratedMessages(state.messages, finalMessages),
+          }));
         }
       });
       const { pendingFinal, lastUserMessageAt, sending: isSendingNow } = get();
@@ -1435,7 +1476,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
           if (fallbackMessages.length > 0) {
             applyLoadedMessages(fallbackMessages, null);
           } else {
-            set({ messages: [], loading: false });
+            applyLoadFailure('Failed to load chat history');
           }
         }
       } catch (err) {
@@ -1444,7 +1485,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         if (fallbackMessages.length > 0) {
           applyLoadedMessages(fallbackMessages, null);
         } else {
-          set({ messages: [], loading: false });
+          applyLoadFailure(String(err));
         }
       }
     })();

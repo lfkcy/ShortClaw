@@ -106,6 +106,7 @@ export function Agents() {
     deleteAgent,
   } = useAgentsStore();
   const [channelGroups, setChannelGroups] = useState<ChannelGroupItem[]>([]);
+  const [hasCompletedInitialLoad, setHasCompletedInitialLoad] = useState(() => agents.length > 0);
 
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [activeAgentId, setActiveAgentId] = useState<string | null>(null);
@@ -116,13 +117,21 @@ export function Agents() {
       const response = await hostApiFetch<{ success: boolean; channels?: ChannelGroupItem[] }>('/api/channels/accounts');
       setChannelGroups(response.channels || []);
     } catch {
-      setChannelGroups([]);
+      // Keep the last rendered snapshot when channel account refresh fails.
     }
   }, []);
 
   useEffect(() => {
+    let mounted = true;
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    void Promise.all([fetchAgents(), fetchChannelAccounts(), refreshProviderSnapshot()]);
+    void Promise.all([fetchAgents(), fetchChannelAccounts(), refreshProviderSnapshot()]).finally(() => {
+      if (mounted) {
+        setHasCompletedInitialLoad(true);
+      }
+    });
+    return () => {
+      mounted = false;
+    };
   }, [fetchAgents, fetchChannelAccounts, refreshProviderSnapshot]);
 
   useEffect(() => {
@@ -150,11 +159,15 @@ export function Agents() {
     () => agents.find((agent) => agent.id === activeAgentId) ?? null,
     [activeAgentId, agents],
   );
+
+  const visibleAgents = agents;
+  const visibleChannelGroups = channelGroups;
+  const isUsingStableValue = loading && hasCompletedInitialLoad;
   const handleRefresh = () => {
     void Promise.all([fetchAgents(), fetchChannelAccounts()]);
   };
 
-  if (loading) {
+  if (loading && !hasCompletedInitialLoad) {
     return (
       <div className="flex flex-col -m-6 dark:bg-background min-h-[calc(100vh-2.5rem)] items-center justify-center">
         <LoadingSpinner size="lg" />
@@ -163,7 +176,7 @@ export function Agents() {
   }
 
   return (
-    <div className="flex flex-col -m-6 dark:bg-background h-[calc(100vh-2.5rem)] overflow-hidden">
+    <div data-testid="agents-page" className="flex flex-col -m-6 dark:bg-background h-[calc(100vh-2.5rem)] overflow-hidden">
       <div className="w-full max-w-5xl mx-auto flex flex-col h-full p-10 pt-16">
         <div className="flex flex-col md:flex-row md:items-start justify-between mb-12 shrink-0 gap-4">
           <div>
@@ -181,7 +194,7 @@ export function Agents() {
               onClick={handleRefresh}
               className="h-9 text-[13px] font-medium rounded-full px-4 border-black/10 dark:border-white/10 bg-transparent hover:bg-black/5 dark:hover:bg-white/5 shadow-none text-foreground/80 hover:text-foreground transition-colors"
             >
-              <RefreshCw className="h-3.5 w-3.5 mr-2" />
+              <RefreshCw className={cn('h-3.5 w-3.5 mr-2', isUsingStableValue && 'animate-spin')} />
               {t('refresh')}
             </Button>
             <Button
@@ -214,11 +227,11 @@ export function Agents() {
           )}
 
           <div className="space-y-3">
-            {agents.map((agent) => (
+            {visibleAgents.map((agent) => (
               <AgentCard
                 key={agent.id}
                 agent={agent}
-                channelGroups={channelGroups}
+                channelGroups={visibleChannelGroups}
                 onOpenSettings={() => setActiveAgentId(agent.id)}
                 onDelete={() => setAgentToDelete(agent)}
               />
@@ -241,7 +254,7 @@ export function Agents() {
       {activeAgent && (
         <AgentSettingsModal
           agent={activeAgent}
-          channelGroups={channelGroups}
+          channelGroups={visibleChannelGroups}
           onClose={() => setActiveAgentId(null)}
         />
       )}
@@ -493,10 +506,21 @@ function AgentSettingsModal({
   const [name, setName] = useState(agent.name);
   const [savingName, setSavingName] = useState(false);
   const [showModelModal, setShowModelModal] = useState(false);
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
 
   useEffect(() => {
     setName(agent.name);
   }, [agent.name]);
+
+  const hasNameChanges = name.trim() !== agent.name;
+
+  const handleRequestClose = () => {
+    if (savingName || hasNameChanges) {
+      setShowCloseConfirm(true);
+      return;
+    }
+    onClose();
+  };
 
   const handleSaveName = async () => {
     if (!name.trim() || name.trim() === agent.name) return;
@@ -540,7 +564,7 @@ function AgentSettingsModal({
           <Button
             variant="ghost"
             size="icon"
-            onClick={onClose}
+            onClick={handleRequestClose}
             className="rounded-full h-8 w-8 -mr-2 -mt-2 text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5"
           >
             <X className="h-4 w-4" />
@@ -652,6 +676,19 @@ function AgentSettingsModal({
           onClose={() => setShowModelModal(false)}
         />
       )}
+      <ConfirmDialog
+        open={showCloseConfirm}
+        title={t('settingsDialog.unsavedChangesTitle')}
+        message={t('settingsDialog.unsavedChangesMessage')}
+        confirmLabel={t('settingsDialog.closeWithoutSaving')}
+        cancelLabel={t('common:actions.cancel')}
+        onConfirm={() => {
+          setShowCloseConfirm(false);
+          setName(agent.name);
+          onClose();
+        }}
+        onCancel={() => setShowCloseConfirm(false)}
+      />
     </div>
   );
 }
@@ -672,6 +709,7 @@ function AgentModelModal({
   const [selectedRuntimeProviderKey, setSelectedRuntimeProviderKey] = useState('');
   const [modelIdInput, setModelIdInput] = useState('');
   const [savingModel, setSavingModel] = useState(false);
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
 
   const runtimeProviderOptions = useMemo<RuntimeProviderOption[]>(() => {
     const vendorMap = new Map<string, ProviderVendorInfo>(providerVendors.map((vendor) => [vendor.id, vendor]));
@@ -740,6 +778,14 @@ function AgentModelModal({
     : null;
   const modelChanged = (desiredOverrideModelRef || '') !== currentOverrideModelRef;
 
+  const handleRequestClose = () => {
+    if (savingModel || modelChanged) {
+      setShowCloseConfirm(true);
+      return;
+    }
+    onClose();
+  };
+
   const handleSaveModel = async () => {
     if (!selectedRuntimeProviderKey) {
       toast.error(t('toast.agentModelProviderRequired'));
@@ -793,7 +839,7 @@ function AgentModelModal({
           <Button
             variant="ghost"
             size="icon"
-            onClick={onClose}
+            onClick={handleRequestClose}
             className="rounded-full h-8 w-8 -mr-2 -mt-2 text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5"
           >
             <X className="h-4 w-4" />
@@ -854,7 +900,7 @@ function AgentModelModal({
             </Button>
             <Button
               variant="outline"
-              onClick={onClose}
+              onClick={handleRequestClose}
               className="h-9 text-[13px] font-medium rounded-full px-4 border-black/10 dark:border-white/10 bg-transparent hover:bg-black/5 dark:hover:bg-white/5 shadow-none text-foreground/80 hover:text-foreground"
             >
               {t('common:actions.cancel')}
@@ -873,6 +919,18 @@ function AgentModelModal({
           </div>
         </CardContent>
       </Card>
+      <ConfirmDialog
+        open={showCloseConfirm}
+        title={t('settingsDialog.unsavedChangesTitle')}
+        message={t('settingsDialog.unsavedChangesMessage')}
+        confirmLabel={t('settingsDialog.closeWithoutSaving')}
+        cancelLabel={t('common:actions.cancel')}
+        onConfirm={() => {
+          setShowCloseConfirm(false);
+          onClose();
+        }}
+        onCancel={() => setShowCloseConfirm(false)}
+      />
     </div>
   );
 }

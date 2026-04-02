@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   getProviderConfig: vi.fn(),
   getProviderDefaultModel: vi.fn(),
   removeProviderFromOpenClaw: vi.fn(),
+  removeProviderKeyFromOpenClaw: vi.fn(),
   saveOAuthTokenToOpenClaw: vi.fn(),
   saveProviderKeyToOpenClaw: vi.fn(),
   setOpenClawDefaultModel: vi.fn(),
@@ -46,6 +47,7 @@ vi.mock('@electron/utils/provider-registry', () => ({
 
 vi.mock('@electron/utils/openclaw-auth', () => ({
   removeProviderFromOpenClaw: mocks.removeProviderFromOpenClaw,
+  removeProviderKeyFromOpenClaw: mocks.removeProviderKeyFromOpenClaw,
   saveOAuthTokenToOpenClaw: mocks.saveOAuthTokenToOpenClaw,
   saveProviderKeyToOpenClaw: mocks.saveProviderKeyToOpenClaw,
   setOpenClawDefaultModel: mocks.setOpenClawDefaultModel,
@@ -71,8 +73,10 @@ vi.mock('@electron/utils/logger', () => ({
 import {
   syncAgentModelOverrideToRuntime,
   syncDefaultProviderToRuntime,
+  syncDeletedProviderApiKeyToRuntime,
   syncDeletedProviderToRuntime,
   syncSavedProviderToRuntime,
+  syncUpdatedProviderToRuntime,
 } from '@electron/services/providers/provider-runtime-sync';
 
 function createProvider(overrides: Partial<ProviderConfig> = {}): ProviderConfig {
@@ -116,6 +120,7 @@ describe('provider-runtime-sync refresh strategy', () => {
     mocks.setOpenClawDefaultModelWithOverride.mockResolvedValue(undefined);
     mocks.saveProviderKeyToOpenClaw.mockResolvedValue(undefined);
     mocks.removeProviderFromOpenClaw.mockResolvedValue(undefined);
+    mocks.removeProviderKeyFromOpenClaw.mockResolvedValue(undefined);
     mocks.updateAgentModelProvider.mockResolvedValue(undefined);
     mocks.updateSingleAgentModelProvider.mockResolvedValue(undefined);
     mocks.listAgentsSnapshot.mockResolvedValue({ agents: [] });
@@ -137,6 +142,34 @@ describe('provider-runtime-sync refresh strategy', () => {
     expect(gateway.debouncedReload).not.toHaveBeenCalled();
   });
 
+  it('removes both runtime and stored account keys when deleting a custom provider', async () => {
+    const gateway = createGateway('running');
+    const customProvider = createProvider({
+      id: 'moonshot-cn',
+      type: 'custom',
+      baseUrl: 'https://api.moonshot.cn/v1',
+    });
+
+    await syncDeletedProviderToRuntime(customProvider, 'moonshot-cn', gateway as GatewayManager);
+
+    expect(mocks.removeProviderFromOpenClaw).toHaveBeenCalledWith('custom-moonshot');
+    expect(mocks.removeProviderFromOpenClaw).toHaveBeenCalledWith('moonshot-cn');
+    expect(mocks.removeProviderFromOpenClaw).toHaveBeenCalledTimes(2);
+    expect(gateway.debouncedRestart).toHaveBeenCalledTimes(1);
+  });
+
+  it('only clears the api-key profile when deleting a provider api key', async () => {
+    const openaiProvider = createProvider({
+      id: 'openai-personal',
+      type: 'openai',
+    });
+
+    await syncDeletedProviderApiKeyToRuntime(openaiProvider, 'openai-personal');
+
+    expect(mocks.removeProviderKeyFromOpenClaw).toHaveBeenCalledWith('openai');
+    expect(mocks.removeProviderFromOpenClaw).not.toHaveBeenCalled();
+  });
+
   it('uses debouncedReload after switching default provider when gateway is running', async () => {
     const gateway = createGateway('running');
     await syncDefaultProviderToRuntime('moonshot', gateway as GatewayManager);
@@ -151,6 +184,34 @@ describe('provider-runtime-sync refresh strategy', () => {
 
     expect(gateway.debouncedReload).not.toHaveBeenCalled();
     expect(gateway.debouncedRestart).not.toHaveBeenCalled();
+  });
+
+  it('uses gpt-5.4 as the browser OAuth default model for OpenAI', async () => {
+    mocks.getProvider.mockResolvedValue(
+      createProvider({
+        id: 'openai-personal',
+        type: 'openai',
+        model: undefined,
+      }),
+    );
+    mocks.getProviderAccount.mockResolvedValue({ authMode: 'oauth_browser' });
+    mocks.getProviderSecret.mockResolvedValue({
+      type: 'oauth',
+      accessToken: 'access',
+      refreshToken: 'refresh',
+      expiresAt: 123,
+      email: 'user@example.com',
+      subject: 'project-1',
+    });
+
+    const gateway = createGateway('running');
+    await syncDefaultProviderToRuntime('openai-personal', gateway as GatewayManager);
+
+    expect(mocks.setOpenClawDefaultModel).toHaveBeenCalledWith(
+      'openai-codex',
+      'openai-codex/gpt-5.4',
+      expect.any(Array),
+    );
   });
 
   it('syncs a targeted agent model override to runtime provider registry', async () => {
@@ -195,5 +256,106 @@ describe('provider-runtime-sync refresh strategy', () => {
         models: [{ id: 'ark-code-latest', name: 'ark-code-latest' }],
       }),
     );
+  });
+
+  it('syncs Ollama provider config to runtime without adding model prefix', async () => {
+    const ollamaProvider = createProvider({
+      id: 'ollamafd',
+      type: 'ollama',
+      name: 'Ollama',
+      model: 'qwen3:30b',
+      baseUrl: 'http://localhost:11434/v1',
+    });
+
+    mocks.getProviderConfig.mockReturnValue(undefined);
+    mocks.getProviderSecret.mockResolvedValue({ type: 'local', apiKey: 'ollama-local' });
+
+    const gateway = createGateway('running');
+    await syncSavedProviderToRuntime(ollamaProvider, undefined, gateway as GatewayManager);
+
+    expect(mocks.syncProviderConfigToOpenClaw).toHaveBeenCalledWith(
+      'ollama-ollamafd',
+      'qwen3:30b',
+      expect.objectContaining({
+        baseUrl: 'http://localhost:11434/v1',
+        api: 'openai-completions',
+      }),
+    );
+    expect(gateway.debouncedReload).toHaveBeenCalledTimes(1);
+  });
+
+  it('syncs Ollama as default provider with correct baseUrl and api protocol', async () => {
+    const ollamaProvider = createProvider({
+      id: 'ollamafd',
+      type: 'ollama',
+      name: 'Ollama',
+      model: 'qwen3:30b',
+      baseUrl: 'http://localhost:11434/v1',
+    });
+
+    mocks.getProvider.mockResolvedValue(ollamaProvider);
+    mocks.getDefaultProvider.mockResolvedValue('ollamafd');
+    mocks.getProviderConfig.mockReturnValue(undefined);
+    mocks.getApiKey.mockResolvedValue('ollama-local');
+
+    const gateway = createGateway('running');
+    await syncDefaultProviderToRuntime('ollamafd', gateway as GatewayManager);
+
+    expect(mocks.setOpenClawDefaultModelWithOverride).toHaveBeenCalledWith(
+      'ollama-ollamafd',
+      'ollama-ollamafd/qwen3:30b',
+      expect.objectContaining({
+        baseUrl: 'http://localhost:11434/v1',
+        api: 'openai-completions',
+      }),
+      expect.any(Array),
+    );
+  });
+  it('syncs updated Ollama provider as default with correct override config', async () => {
+    const ollamaProvider = createProvider({
+      id: 'ollamafd',
+      type: 'ollama',
+      name: 'Ollama',
+      model: 'qwen3:30b',
+      baseUrl: 'http://localhost:11434/v1',
+    });
+
+    mocks.getProviderConfig.mockReturnValue(undefined);
+    mocks.getProviderSecret.mockResolvedValue({ type: 'local', apiKey: 'ollama-local' });
+    mocks.getDefaultProvider.mockResolvedValue('ollamafd');
+
+    const gateway = createGateway('running');
+    await syncUpdatedProviderToRuntime(ollamaProvider, undefined, gateway as GatewayManager);
+
+    // Should use the custom/ollama branch with explicit override
+    expect(mocks.setOpenClawDefaultModelWithOverride).toHaveBeenCalledWith(
+      'ollama-ollamafd',
+      'ollama-ollamafd/qwen3:30b',
+      expect.objectContaining({
+        baseUrl: 'http://localhost:11434/v1',
+        api: 'openai-completions',
+      }),
+      expect.any(Array),
+    );
+    // Should NOT call the non-override path
+    expect(mocks.setOpenClawDefaultModel).not.toHaveBeenCalled();
+    expect(gateway.debouncedReload).toHaveBeenCalledTimes(1);
+  });
+
+  it('removes Ollama provider from runtime on delete', async () => {
+    const ollamaProvider = createProvider({
+      id: 'ollamafd',
+      type: 'ollama',
+      name: 'Ollama',
+      model: 'qwen3:30b',
+      baseUrl: 'http://localhost:11434/v1',
+    });
+
+    const gateway = createGateway('running');
+    await syncDeletedProviderToRuntime(ollamaProvider, 'ollamafd', gateway as GatewayManager);
+
+    expect(mocks.removeProviderFromOpenClaw).toHaveBeenCalledWith('ollama-ollamafd');
+    expect(mocks.removeProviderFromOpenClaw).toHaveBeenCalledWith('ollamafd');
+    expect(gateway.debouncedRestart).toHaveBeenCalledTimes(1);
   });
 });

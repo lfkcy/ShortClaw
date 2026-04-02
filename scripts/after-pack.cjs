@@ -575,7 +575,6 @@ exports.default = async function afterPack(context) {
   const BUNDLED_PLUGINS = [
     { npmName: '@soimy/dingtalk', pluginId: 'dingtalk' },
     { npmName: '@wecom/wecom-openclaw-plugin', pluginId: 'wecom' },
-    { npmName: '@tencent-connect/openclaw-qqbot', pluginId: 'qqbot' },
     { npmName: '@larksuite/openclaw-lark', pluginId: 'feishu-openclaw-plugin' },
     { npmName: '@tencent-weixin/openclaw-weixin', pluginId: 'openclaw-weixin' },
   ];
@@ -594,6 +593,63 @@ exports.default = async function afterPack(context) {
       }
       // Fix hardcoded plugin ID mismatches in compiled JS
       patchPluginIds(pluginDestDir, pluginId);
+    }
+  }
+
+  // 1.2 Copy built-in extension node_modules that electron-builder skipped.
+  //     OpenClaw 3.31+ ships built-in extensions (discord, qqbot, etc.) under
+  //     dist/extensions/<ext>/node_modules/. These are skipped by extraResources
+  //     because .gitignore contains "node_modules/".
+  //
+  //     Extension code is loaded via shared chunks in dist/ (e.g. outbound-*.js)
+  //     which resolve modules from the top-level openclaw/node_modules/, NOT from
+  //     the extension's own node_modules/. So we must merge extension deps into
+  //     the top-level node_modules/ as well.
+  const buildExtDir = join(__dirname, '..', 'build', 'openclaw', 'dist', 'extensions');
+  const packExtDir = join(openclawRoot, 'dist', 'extensions');
+  if (existsSync(buildExtDir)) {
+    let extNMCount = 0;
+    let mergedPkgCount = 0;
+    for (const extEntry of readdirSync(buildExtDir, { withFileTypes: true })) {
+      if (!extEntry.isDirectory()) continue;
+      const srcNM = join(buildExtDir, extEntry.name, 'node_modules');
+      if (!existsSync(srcNM)) continue;
+
+      // Copy to extension's own node_modules (for direct requires from extension code)
+      const destExtNM = join(packExtDir, extEntry.name, 'node_modules');
+      if (!existsSync(destExtNM)) {
+        cpSync(srcNM, destExtNM, { recursive: true });
+      }
+      extNMCount++;
+
+      // Merge into top-level openclaw/node_modules/ (for shared chunks in dist/)
+      for (const pkgEntry of readdirSync(srcNM, { withFileTypes: true })) {
+        if (!pkgEntry.isDirectory() || pkgEntry.name === '.bin') continue;
+        const srcPkg = join(srcNM, pkgEntry.name);
+        const destPkg = join(dest, pkgEntry.name);
+
+        if (pkgEntry.name.startsWith('@')) {
+          // Scoped package — iterate sub-entries
+          for (const scopeEntry of readdirSync(srcPkg, { withFileTypes: true })) {
+            if (!scopeEntry.isDirectory()) continue;
+            const srcScoped = join(srcPkg, scopeEntry.name);
+            const destScoped = join(destPkg, scopeEntry.name);
+            if (!existsSync(destScoped)) {
+              mkdirSync(dirname(destScoped), { recursive: true });
+              cpSync(srcScoped, destScoped, { recursive: true });
+              mergedPkgCount++;
+            }
+          }
+        } else {
+          if (!existsSync(destPkg)) {
+            cpSync(srcPkg, destPkg, { recursive: true });
+            mergedPkgCount++;
+          }
+        }
+      }
+    }
+    if (extNMCount > 0) {
+      console.log(`[after-pack] ✅ Copied node_modules for ${extNMCount} built-in extension(s), merged ${mergedPkgCount} packages into top-level.`);
     }
   }
 
@@ -693,6 +749,54 @@ exports.default = async function afterPack(context) {
     }
     if (asarLruCount > 0) {
       console.log(`[after-pack] 🩹 Patched ${asarLruCount} lru-cache instance(s) in app.asar.unpacked`);
+    }
+  }
+  // 6. [Windows only] Patch NSIS extractAppPackage.nsh to skip CopyFiles
+  //
+  // electron-builder's extractUsing7za macro decompresses app-64.7z into a temp
+  // directory, then uses CopyFiles to copy ~300MB (thousands of small files) to
+  // $INSTDIR.  With Windows Defender real-time scanning each file, CopyFiles
+  // alone takes 3-5 minutes and makes the installer appear frozen.
+  //
+  // Patch: replace the macro with a direct Nsis7z::Extract to $INSTDIR.  This is
+  // safe because customCheckAppRunning in installer.nsh already renames the old
+  // $INSTDIR to a _stale_ directory, so the target is always an empty dir.
+  // The Nsis7z plugin streams LZMA2 data directly to disk — no temp copy needed.
+  if (platform === 'win32') {
+    const extractNsh = join(
+      __dirname, '..', 'node_modules', 'app-builder-lib',
+      'templates', 'nsis', 'include', 'extractAppPackage.nsh'
+    );
+    if (existsSync(extractNsh)) {
+      const { readFileSync: readFS, writeFileSync: writeFS } = require('fs');
+      const original = readFS(extractNsh, 'utf8');
+
+      // Only patch once (idempotent check)
+      if (original.includes('CopyFiles') && !original.includes('ClawX-patched')) {
+        // Replace the extractUsing7za macro body with a direct extraction.
+        // Keep the macro signature so the rest of the template compiles unchanged.
+        const patched = original.replace(
+          /(!macro extractUsing7za FILE[\s\S]*?!macroend)/,
+          [
+            '!macro extractUsing7za FILE',
+            '  ; ClawX-patched: extract directly to $INSTDIR (skip temp + CopyFiles).',
+            '  ; customCheckAppRunning already renamed old $INSTDIR to _stale_X,',
+            '  ; so the target directory is always empty.  Nsis7z streams LZMA2 data',
+            '  ; directly to disk — ~10s vs 3-5 min for CopyFiles with Windows Defender.',
+            '  Nsis7z::Extract "${FILE}"',
+            '!macroend',
+          ].join('\n')
+        );
+
+        if (patched !== original) {
+          writeFS(extractNsh, patched, 'utf8');
+          console.log('[after-pack] ⚡ Patched extractAppPackage.nsh: CopyFiles eliminated, using direct Nsis7z::Extract.');
+        } else {
+          console.warn('[after-pack] ⚠️  extractAppPackage.nsh regex did not match — template may have changed.');
+        }
+      } else if (original.includes('ClawX-patched')) {
+        console.log('[after-pack] ⚡ extractAppPackage.nsh already patched (idempotent skip).');
+      }
     }
   }
 };
