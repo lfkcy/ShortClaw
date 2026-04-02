@@ -12,6 +12,16 @@
     "launchAtStartup": "システム起動時に自動起動",
     "launchAtStartupDesc": "ログイン時に ShortClaw を自動的に起動します"
   },
+  "desktopPet": {
+    "enabled": "デスクトップペット",
+    "enabledDesc": "全体の Agent 状態を反映するフローティングのデスクトップコンパニオンを表示します。",
+    "restorePolicy": "非表示後の復元方法",
+    "restorePolicyDesc": "次回 ShortClaw 起動時にペットを再表示するかどうかを選びます。",
+    "restoreAlways": "起動時に常に表示",
+    "restoreRemember": "前回の表示状態を記憶",
+    "toggleFailed": "デスクトップペット設定の更新に失敗しました",
+    "restoreFailed": "デスクトップペット復元ポリシーの更新に失敗しました"
+  },
   "aiProviders": {
     "title": "AI プロバイダー",
     "description": "AI モデルプロバイダーと API キーを設定",

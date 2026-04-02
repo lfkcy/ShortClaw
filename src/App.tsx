@@ -18,6 +18,7 @@ import { Cron } from './pages/Cron';
 import { Settings } from './pages/Settings';
 import { Setup } from './pages/Setup';
 import { Office } from './pages/Office';
+import { Pet } from './pages/Pet';
 import { useSettingsStore } from './stores/settings';
 import { useGatewayStore } from './stores/gateway';
 import { useProviderStore } from './stores/providers';
@@ -121,7 +122,11 @@ function App() {
 
   // Redirect to setup wizard if not complete
   useEffect(() => {
-    if (!setupComplete && !location.pathname.startsWith('/setup')) {
+    if (
+      !setupComplete &&
+      !location.pathname.startsWith('/setup') &&
+      !location.pathname.startsWith('/pet')
+    ) {
       navigate('/setup');
     }
   }, [setupComplete, location.pathname, navigate]);
@@ -169,6 +174,7 @@ function App() {
         <Routes>
           {/* Setup wizard (shown on first launch) */}
           <Route path="/setup/*" element={<Setup />} />
+          <Route path="/pet" element={<Pet />} />
 
           {/* Main application routes */}
           <Route element={<MainLayout />}>

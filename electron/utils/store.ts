@@ -6,6 +6,10 @@
 import { randomBytes } from 'crypto';
 import { app } from 'electron';
 import { resolveSupportedLanguage } from '../../shared/language';
+import {
+  PET_RESTORE_POLICIES,
+  type DesktopPetRestorePolicy,
+} from '../../shared/pet';
 
 // Lazy-load electron-store (ESM module)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -27,6 +31,8 @@ export interface AppSettings {
   language: string;
   startMinimized: boolean;
   launchAtStartup: boolean;
+  desktopPetEnabled: boolean;
+  desktopPetRestorePolicy: DesktopPetRestorePolicy;
   telemetryEnabled: boolean;
   machineId: string;
   hasReportedInstall: boolean;
@@ -72,12 +78,15 @@ function getSystemLocale(): string {
 }
 
 function createDefaultSettings(): AppSettings {
+  const [defaultPetRestorePolicy] = PET_RESTORE_POLICIES;
   return {
     // General
     theme: 'system',
     language: resolveSupportedLanguage(getSystemLocale()),
     startMinimized: false,
     launchAtStartup: false,
+    desktopPetEnabled: false,
+    desktopPetRestorePolicy: defaultPetRestorePolicy,
     telemetryEnabled: true,
     machineId: '',
     hasReportedInstall: false,

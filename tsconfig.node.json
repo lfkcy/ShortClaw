@@ -27,5 +27,5 @@
       "@electron/*": ["electron/*"]
     }
   },
-  "include": ["electron", "vite.config.ts"]
+  "include": ["electron", "shared", "vite.config.ts"]
 }

@@ -12,6 +12,16 @@
     "launchAtStartup": "Launch at system startup",
     "launchAtStartupDesc": "Automatically launch ShortClaw when you log in"
   },
+  "desktopPet": {
+    "enabled": "Desktop Pet",
+    "enabledDesc": "Show a floating desktop companion that reflects overall agent status.",
+    "restorePolicy": "Restore After Hidden",
+    "restorePolicyDesc": "Choose whether the pet should reappear the next time ShortClaw starts.",
+    "restoreAlways": "Always show on startup",
+    "restoreRemember": "Remember last visibility",
+    "toggleFailed": "Failed to update desktop pet setting",
+    "restoreFailed": "Failed to update desktop pet restore policy"
+  },
   "aiProviders": {
     "title": "AI Providers",
     "description": "Configure your AI model providers and API keys",

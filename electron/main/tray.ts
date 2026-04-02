@@ -7,6 +7,10 @@ import { join } from 'path';
 
 let tray: Tray | null = null;
 
+type TrayOptions = {
+  hidePet: () => void;
+};
+
 /**
  * Resolve the icons directory path (works in both dev and packaged mode)
  */
@@ -20,7 +24,7 @@ function getIconsDir(): string {
 /**
  * Create system tray icon and menu
  */
-export function createTray(mainWindow: BrowserWindow): Tray {
+export function createTray(mainWindow: BrowserWindow, options: TrayOptions): Tray {
   // Use platform-appropriate icon for system tray
   const iconsDir = getIconsDir();
   let iconPath: string;
@@ -90,6 +94,12 @@ export function createTray(mainWindow: BrowserWindow): Tray {
     {
       label: 'Quick Actions',
       submenu: [
+        {
+          label: 'Hide Pet',
+          click: () => {
+            options.hidePet();
+          },
+        },
         {
           label: 'Open Chat',
           click: () => {

@@ -12,6 +12,16 @@
     "launchAtStartup": "开机自动启动",
     "launchAtStartupDesc": "登录系统后自动启动 ShortClaw"
   },
+  "desktopPet": {
+    "enabled": "桌宠",
+    "enabledDesc": "显示一个悬浮桌面的陪伴窗口，用来反馈整体 Agent 状态。",
+    "restorePolicy": "隐藏后的恢复方式",
+    "restorePolicyDesc": "选择下次启动 ShortClaw 时，桌宠是否自动重新显示。",
+    "restoreAlways": "启动时总是显示",
+    "restoreRemember": "记住上次可见状态",
+    "toggleFailed": "更新桌宠设置失败",
+    "restoreFailed": "更新桌宠恢复策略失败"
+  },
   "aiProviders": {
     "title": "AI 模型提供商",
     "description": "配置 AI 模型提供商和 API 密钥",

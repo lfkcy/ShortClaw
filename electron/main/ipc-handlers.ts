@@ -89,6 +89,8 @@ import {
   type AppRequest,
   type AppResponse,
 } from './ipc/request-helpers';
+import type { PetWindowController } from './pet-window';
+import type { PetStateService } from './pet-state';
 
 /**
  * Register all IPC handlers
@@ -96,7 +98,9 @@ import {
 export function registerIpcHandlers(
   gatewayManager: GatewayManager,
   clawHubService: ClawHubService,
-  mainWindow: BrowserWindow
+  mainWindow: BrowserWindow,
+  petWindowController: PetWindowController,
+  petStateService: PetStateService,
 ): void {
   // Unified request protocol (non-breaking: legacy channels remain available)
   registerUnifiedRequestHandlers(gatewayManager);
@@ -129,7 +133,7 @@ export function registerIpcHandlers(
   registerAppHandlers();
 
   // Settings handlers
-  registerSettingsHandlers(gatewayManager);
+  registerSettingsHandlers(gatewayManager, mainWindow);
 
   // Office handlers
   registerOfficeHandlers(gatewayManager);
@@ -151,6 +155,9 @@ export function registerIpcHandlers(
 
   // Window control handlers (for custom title bar on Windows/Linux)
   registerWindowHandlers(mainWindow);
+
+  // Desktop pet handlers
+  registerPetHandlers(petWindowController, petStateService);
 
   // WhatsApp handlers
   registerWhatsAppHandlers(mainWindow);
@@ -2233,7 +2240,17 @@ function registerAppHandlers(): void {
   });
 }
 
-function registerSettingsHandlers(gatewayManager: GatewayManager): void {
+function registerSettingsHandlers(
+  gatewayManager: GatewayManager,
+  mainWindow: BrowserWindow,
+): void {
+  const pushSettingsPatch = (patch: Partial<AppSettings>) => {
+    if (mainWindow.isDestroyed()) {
+      return;
+    }
+    mainWindow.webContents.send('settings:changed', patch);
+  };
+
   const handleProxySettingsChange = async () => {
     const settings = await getAllSettings();
     await syncProxyConfigToOpenClaw(settings, { preserveExistingWhenDisabled: false });
@@ -2255,6 +2272,7 @@ function registerSettingsHandlers(gatewayManager: GatewayManager): void {
     'settings:set',
     async (_, key: keyof AppSettings, value: AppSettings[keyof AppSettings]) => {
       await setSetting(key, value as never);
+      pushSettingsPatch({ [key]: value } as Partial<AppSettings>);
 
       if (
         key === 'proxyEnabled' ||
@@ -2281,6 +2299,7 @@ function registerSettingsHandlers(gatewayManager: GatewayManager): void {
     for (const [key, value] of entries) {
       await setSetting(key, value as never);
     }
+    pushSettingsPatch(patch);
 
     if (
       entries.some(
@@ -2305,9 +2324,32 @@ function registerSettingsHandlers(gatewayManager: GatewayManager): void {
   ipcMain.handle('settings:reset', async () => {
     await resetSettings();
     const settings = await getAllSettings();
+    pushSettingsPatch(settings);
     await handleProxySettingsChange();
     await syncLaunchAtStartupSettingFromStore();
     return { success: true, settings };
+  });
+}
+
+function registerPetHandlers(
+  petWindowController: PetWindowController,
+  petStateService: PetStateService,
+): void {
+  ipcMain.handle('pet:get-state', () => {
+    return petStateService.getSnapshot();
+  });
+
+  ipcMain.handle('pet:focus-main-window', () => {
+    petWindowController.focusMainWindow();
+    return { success: true };
+  });
+
+  ipcMain.handle('pet:drag-start', () => {
+    return petWindowController.getBounds();
+  });
+
+  ipcMain.on('pet:drag-move', (_, nextPosition: { x: number; y: number }) => {
+    petWindowController.moveTo(nextPosition.x, nextPosition.y);
   });
 }
 function registerUsageHandlers(): void {

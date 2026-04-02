@@ -53,6 +53,8 @@ import { deviceOAuthManager } from '../utils/device-oauth';
 import { browserOAuthManager } from '../utils/browser-oauth';
 import { whatsAppLoginManager } from '../utils/whatsapp-login';
 import { syncAllProviderAuthToRuntime } from '../services/providers/provider-runtime-sync';
+import { PetStateService } from './pet-state';
+import { PetWindowController } from './pet-window';
 
 const WINDOWS_APP_USER_MODEL_ID = 'app.shortclaw.desktop';
 
@@ -129,6 +131,9 @@ let gatewayManager!: GatewayManager;
 let clawHubService!: ClawHubService;
 let hostEventBus!: HostEventBus;
 let hostApiServer: Server | null = null;
+let petStateService!: PetStateService;
+let petWindowController!: PetWindowController;
+let isPetHiddenForSession = false;
 const mainWindowFocusState = createMainWindowFocusState();
 const quitLifecycleState = createQuitLifecycleState();
 
@@ -233,6 +238,21 @@ function focusMainWindow(): void {
   focusWindow(mainWindow);
 }
 
+async function syncDesktopPetEnabled(enabled: boolean): Promise<void> {
+  if (enabled) {
+    if (isPetHiddenForSession) {
+      return;
+    }
+    petStateService.start();
+    await petWindowController.show();
+    return;
+  }
+
+  isPetHiddenForSession = true;
+  petStateService.stop();
+  await petWindowController.destroy();
+}
+
 function createMainWindow(): BrowserWindow {
   const win = createWindow();
 
@@ -293,9 +313,25 @@ async function initialize(): Promise<void> {
 
   // Create the main window
   const window = createMainWindow();
+  isPetHiddenForSession = false;
+
+  petWindowController = new PetWindowController({
+    getMainWindow: () => mainWindow,
+    getPetState: () => petStateService.getSnapshot(),
+    onHideRequest: () => {
+      void syncDesktopPetEnabled(false);
+    },
+  });
+  petStateService.subscribe((snapshot) => {
+    petWindowController.updateState(snapshot);
+  });
 
   // Create system tray
-  createTray(window);
+  createTray(window, {
+    hidePet: () => {
+      void syncDesktopPetEnabled(false);
+    },
+  });
 
   // Override security headers ONLY for the OpenClaw Gateway Control UI.
   // The URL filter ensures this callback only fires for gateway requests,
@@ -321,7 +357,7 @@ async function initialize(): Promise<void> {
   );
 
   // Register IPC handlers
-  registerIpcHandlers(gatewayManager, clawHubService, window);
+  registerIpcHandlers(gatewayManager, clawHubService, window, petWindowController, petStateService);
 
   hostApiServer = startHostApiServer({
     gatewayManager,
@@ -453,6 +489,13 @@ async function initialize(): Promise<void> {
     logger.info('Gateway auto-start disabled in settings');
   }
 
+  // Desktop pet is user-facing UI and must never break app/gateway startup.
+  try {
+    await syncDesktopPetEnabled(true);
+  } catch (error) {
+    logger.error('Failed to show desktop pet at startup:', error);
+  }
+
   // Merge ShortClaw context snippets into the workspace bootstrap files.
   // The gateway seeds workspace files asynchronously after its HTTP server
   // is ready, so ensureShortClawContext will retry until the target files appear.
@@ -497,6 +540,7 @@ if (gotTheLock) {
   gatewayManager = new GatewayManager();
   clawHubService = new ClawHubService();
   hostEventBus = new HostEventBus();
+  petStateService = new PetStateService(gatewayManager);
 
   // When a second instance is launched, focus the existing window instead.
   app.on('second-instance', () => {

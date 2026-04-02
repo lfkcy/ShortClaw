@@ -45,6 +45,9 @@ const electronAPI = {
         'app:quit',
         'app:relaunch',
         'app:request',
+        'pet:get-state',
+        'pet:focus-main-window',
+        'pet:drag-start',
         // Window controls
         'window:minimize',
         'window:maximize',
@@ -153,6 +156,17 @@ const electronAPI = {
       throw new Error(`Invalid IPC channel: ${channel}`);
     },
 
+    send: (channel: string, ...args: unknown[]) => {
+      const validChannels = ['pet:drag-move'];
+
+      if (validChannels.includes(channel)) {
+        ipcRenderer.send(channel, ...args);
+        return;
+      }
+
+      throw new Error(`Invalid IPC channel: ${channel}`);
+    },
+
     /**
      * Listen for events from main process
      */
@@ -185,6 +199,8 @@ const electronAPI = {
         'oauth:success',
         'oauth:error',
         'openclaw:cli-installed',
+        'pet:state-changed',
+        'settings:changed',
       ];
 
       if (validChannels.includes(channel)) {
@@ -233,6 +249,7 @@ const electronAPI = {
         'oauth:code',
         'oauth:success',
         'oauth:error',
+        'pet:state-changed',
       ];
 
       if (validChannels.includes(channel)) {
