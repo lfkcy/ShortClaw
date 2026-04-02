@@ -1,12 +1,18 @@
-import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from 'react';
 import { invokeIpc } from '@/lib/api-client';
 import type { PetStateSnapshot } from '../../../shared/pet';
 import { getPetCopy } from '../../../shared/pet-copy';
 
-const SPRITE_COLUMNS = 8;
+const SPRITE_COLUMNS = 6;
 const SPRITE_RENDER_SIZE = 112;
 const IDLE_FRAMES = [0, 1] as const;
-const WORKING_FRAMES = [0, 1, 2, 3, 4, 5, 6, 7] as const;
+const WORKING_FRAMES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] as const;
 const ERROR_FRAMES = [4, 5] as const;
 const DRAG_THRESHOLD = 6;
 
@@ -64,7 +70,7 @@ export function Pet() {
         if (nextState) {
           setPetState(nextState);
         }
-      },
+      }
     );
 
     return () => {
@@ -75,7 +81,8 @@ export function Pet() {
   }, []);
 
   useEffect(() => {
-    const intervalMs = petState.status === 'working' ? 120 : petState.status === 'error' ? 180 : 420;
+    const intervalMs =
+      petState.status === 'working' ? 120 : petState.status === 'error' ? 180 : 420;
     const timer = window.setInterval(() => {
       setTick((current) => current + 1);
     }, intervalMs);
@@ -93,7 +100,7 @@ export function Pet() {
     () => ({
       width: `${SPRITE_RENDER_SIZE}px`,
       height: `${SPRITE_RENDER_SIZE}px`,
-      backgroundImage: 'url(/assets/pets/star-working-spritesheet-grid.webp)',
+      backgroundImage: 'url(/assets/pets/star-working-spritesheet-grid.png)',
       backgroundRepeat: 'no-repeat',
       backgroundPosition: `${spritePositionX}px ${spritePositionY}px`,
       backgroundSize: `${SPRITE_COLUMNS * SPRITE_RENDER_SIZE}px auto`,
@@ -111,7 +118,7 @@ export function Pet() {
             : `translateY(${tick % 2 === 0 ? 0 : -1}px)`,
       transition: 'transform 120ms ease-out, filter 160ms ease-out',
     }),
-    [petState.status, spritePositionX, spritePositionY, tick],
+    [petState.status, spritePositionX, spritePositionY, tick]
   );
 
   const handleOpenMainWindow = () => {
