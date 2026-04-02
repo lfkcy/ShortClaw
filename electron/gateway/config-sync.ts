@@ -198,7 +198,7 @@ export async function syncGatewayConfigBeforeLaunch(
 
     // Also ensure plugins referenced in plugins.allow are installed even if
     // they have no channels.X section yet (e.g. qqbot added via plugins.allow
-    // but never fully saved through ClawX UI).
+    // but never fully saved through ShortClaw UI).
     try {
       const rawCfg = await readOpenClawConfig();
       const allowList = Array.isArray(rawCfg.plugins?.allow) ? (rawCfg.plugins!.allow as string[]) : [];

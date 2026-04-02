@@ -9,9 +9,9 @@ export type GatewayEnv = Record<string, string | undefined>;
 
 /**
  * OpenClaw CLI treats certain environment variables as systemd supervisor hints.
- * When present in ClawX-owned child-process launches, it can mistakenly enter
+ * When present in ShortClaw-owned child-process launches, it can mistakenly enter
  * a supervised process retry loop. Strip those variables so startup follows
- * ClawX lifecycle.
+ * ShortClaw lifecycle.
  */
 export function stripSystemdSupervisorEnv(env: GatewayEnv): GatewayEnv {
   const next = { ...env };

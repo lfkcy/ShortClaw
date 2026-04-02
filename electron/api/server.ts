@@ -61,7 +61,7 @@ export function getHostApiToken(): string {
   return hostApiToken;
 }
 
-export function startHostApiServer(ctx: HostApiContext, port = getPort('CLAWX_HOST_API')): Server {
+export function startHostApiServer(ctx: HostApiContext, port = getPort('SHORTCLAW_HOST_API')): Server {
   // Generate a cryptographically random token for this session.
   hostApiToken = randomBytes(32).toString('hex');
 
@@ -122,7 +122,7 @@ export function startHostApiServer(ctx: HostApiContext, port = getPort('CLAWX_HO
       logger.error(
         `Host API server failed to bind port ${port}: ${error.message}. ` +
           'On Windows this is often caused by Hyper-V reserving the port range. ' +
-          `Set CLAWX_PORT_CLAWX_HOST_API env var to override the default port.`
+          `Set SHORTCLAW_PORT_SHORTCLAW_HOST_API env var to override the default port.`
       );
     } else {
       logger.error('Host API server error:', error);

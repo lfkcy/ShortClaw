@@ -378,7 +378,7 @@ from `dist/` and `dist-electron/`, so it does not require manually running
 
 - builds the renderer and Electron bundles with `pnpm run build:vite`
 - starts Electron in an isolated E2E mode with a temporary `HOME`
-- uses a temporary ClawX `userData` directory
+- uses a temporary ShortClaw `userData` directory
 - skips heavy startup side effects such as gateway auto-start, bundled skill
   installation, tray creation, and CLI auto-install
 

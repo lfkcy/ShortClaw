@@ -11,7 +11,7 @@ type HostApiFetchRequest = {
 };
 
 export function registerHostApiProxyHandlers(): void {
-  const hostApiPort = getPort('CLAWX_HOST_API');
+  const hostApiPort = getPort('SHORTCLAW_HOST_API');
 
   // Expose the per-session auth token to the renderer so the browser-fallback
   // path in host-api.ts can authenticate against the Host API server.

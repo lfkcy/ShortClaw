@@ -1459,7 +1459,7 @@ export async function sanitizeOpenClawConfig(): Promise<void> {
     }
 
     // ── tools.exec approvals (OpenClaw 3.28+) ──────────────────────
-    // ClawX is a local desktop app where the user is the trusted operator.
+    // ShortClaw is a local desktop app where the user is the trusted operator.
     // Exec approval prompts add unnecessary friction in this context, so we
     // set security="full" (allow all commands) and ask="off" (never prompt).
     // If a user has manually configured a stricter ~/.openclaw/exec-approvals.json,
@@ -1471,7 +1471,7 @@ export async function sanitizeOpenClawConfig(): Promise<void> {
       toolsConfig.exec = execConfig;
       toolsModified = true;
       console.log(
-        '[sanitize] Set tools.exec.security="full" and tools.exec.ask="off" to disable exec approvals for ClawX desktop'
+        '[sanitize] Set tools.exec.security="full" and tools.exec.ask="off" to disable exec approvals for ShortClaw desktop'
       );
     }
 

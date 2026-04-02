@@ -56,9 +56,9 @@ import { syncAllProviderAuthToRuntime } from '../services/providers/provider-run
 import { PetStateService } from './pet-state';
 import { PetWindowController } from './pet-window';
 
-const WINDOWS_APP_USER_MODEL_ID = 'app.clawx.desktop';
-const isE2EMode = process.env.CLAWX_E2E === '1';
-const requestedUserDataDir = process.env.CLAWX_USER_DATA_DIR?.trim();
+const WINDOWS_APP_USER_MODEL_ID = 'app.shortclaw.desktop';
+const isE2EMode = process.env.SHORTCLAW_E2E === '1';
+const requestedUserDataDir = process.env.SHORTCLAW_USER_DATA_DIR?.trim();
 
 if (isE2EMode && requestedUserDataDir) {
   app.setPath('userData', requestedUserDataDir);
@@ -175,7 +175,7 @@ function createWindow(): BrowserWindow {
   const isMac = process.platform === 'darwin';
   const isWindows = process.platform === 'win32';
   const useCustomTitleBar = isWindows;
-  const shouldSkipSetupForE2E = process.env.CLAWX_E2E_SKIP_SETUP === '1';
+  const shouldSkipSetupForE2E = process.env.SHORTCLAW_E2E_SKIP_SETUP === '1';
 
   const win = new BrowserWindow({
     width: 1280,
@@ -397,7 +397,7 @@ async function initialize(): Promise<void> {
   // template content). This fixes a race condition where ensureShortClawContext()
   // previously created the file before the gateway could seed the full template.
   if (!isE2EMode) {
-    void repairClawXOnlyBootstrapFiles().catch((error) => {
+    void repairShortClawOnlyBootstrapFiles().catch((error) => {
       logger.warn('Failed to repair bootstrap files:', error);
     });
   }
@@ -433,8 +433,8 @@ async function initialize(): Promise<void> {
   gatewayManager.on('status', (status: { state: string }) => {
     hostEventBus.emit('gateway:status', status);
     if (status.state === 'running' && !isE2EMode) {
-      void ensureClawXContext().catch((error) => {
-        logger.warn('Failed to re-merge ClawX context after gateway reconnect:', error);
+      void ensureShortClawContext().catch((error) => {
+        logger.warn('Failed to re-merge ShortClaw context after gateway reconnect:', error);
       });
     }
   });
@@ -530,10 +530,10 @@ async function initialize(): Promise<void> {
 
   // Merge ShortClaw context snippets into the workspace bootstrap files.
   // The gateway seeds workspace files asynchronously after its HTTP server
-  // is ready, so ensureClawXContext will retry until the target files appear.
+  // is ready, so ensureShortClawContext will retry until the target files appear.
   if (!isE2EMode) {
-    void ensureClawXContext().catch((error) => {
-      logger.warn('Failed to merge ClawX context into workspace:', error);
+    void ensureShortClawContext().catch((error) => {
+      logger.warn('Failed to merge ShortClaw context into workspace:', error);
     });
   }
 
